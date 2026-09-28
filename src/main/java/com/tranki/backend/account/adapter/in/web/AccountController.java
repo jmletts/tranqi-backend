@@ -14,10 +14,14 @@ public class AccountController {
 
     private final RechargeAccountUseCase rechargeAccountUseCase;
     private final com.tranki.backend.account.application.TransferFundsUseCase transferFundsUseCase;
+    private final com.tranki.backend.account.application.GetAccountMovementsUseCase getAccountMovementsUseCase;
 
-    public AccountController(RechargeAccountUseCase rechargeAccountUseCase, com.tranki.backend.account.application.TransferFundsUseCase transferFundsUseCase) {
+    public AccountController(RechargeAccountUseCase rechargeAccountUseCase, 
+                             com.tranki.backend.account.application.TransferFundsUseCase transferFundsUseCase,
+                             com.tranki.backend.account.application.GetAccountMovementsUseCase getAccountMovementsUseCase) {
         this.rechargeAccountUseCase = rechargeAccountUseCase;
         this.transferFundsUseCase = transferFundsUseCase;
+        this.getAccountMovementsUseCase = getAccountMovementsUseCase;
     }
 
     @PostMapping("/recharge")
@@ -30,5 +34,12 @@ public class AccountController {
     public ResponseEntity<Void> transfer(@org.springframework.web.bind.annotation.PathVariable java.util.UUID userId, @RequestBody com.tranki.backend.account.adapter.in.web.dto.TransferRequestDTO request) {
         transferFundsUseCase.execute(userId, request);
         return ResponseEntity.ok().build();
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/users/{userId}/accounts/{accountId}/movements")
+    public ResponseEntity<com.tranki.backend.account.adapter.in.web.dto.AccountMovementsResponseDTO> getMovements(
+            @org.springframework.web.bind.annotation.PathVariable java.util.UUID userId,
+            @org.springframework.web.bind.annotation.PathVariable java.util.UUID accountId) {
+        return ResponseEntity.ok(getAccountMovementsUseCase.execute(userId, accountId));
     }
 }

@@ -49,6 +49,10 @@ public class Card {
         }
     }
 
+    public void blockByDebt() {
+        this.cardStatus = CardStatus.BLOCKED_DEBT;
+    }
+
     public void issue(UUID accountId, UUID kioskAgentId, String verificationNumber, String securityCodeHash) {
         if (this.cardStatus != CardStatus.IN_INVENTORY) {
             throw new IllegalStateException("Card is not IN_INVENTORY");
