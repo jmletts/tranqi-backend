@@ -43,6 +43,12 @@ public class Card {
         this.failedLinkAttempts = 0;
     }
 
+    public void unlockFromDebt() {
+        if (this.cardStatus == CardStatus.BLOCKED_DEBT) {
+            this.cardStatus = CardStatus.ACTIVE;
+        }
+    }
+
     public void issue(UUID accountId, UUID kioskAgentId, String verificationNumber, String securityCodeHash) {
         if (this.cardStatus != CardStatus.IN_INVENTORY) {
             throw new IllegalStateException("Card is not IN_INVENTORY");

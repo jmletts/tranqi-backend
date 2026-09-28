@@ -53,35 +53,75 @@ tranki-backend/
 
 ---
 
-## 3. Reglas Inmutables de Negocio (Resumen Autoritativo)
+## 3. Regla de Idioma (CRÍTICA)
 
-1. **Identidad:** La entidad `Usuario` **no** tiene roles (como `TITULAR` o `TUTOR`). Un usuario puede administrar múltiples tarjetas.
-2. **Relación 1:1 Cuenta-Tarjeta:** Toda `Cuenta` pertenece de forma exclusiva a una única `Tarjeta`.
-3. **Tarjetas Anónimas:** El campo `usuarioId` reside en la `Tarjeta` y puede ser nulo (`null`), indicando que es una tarjeta anónima adquirida en kiosco.
-4. **Ciclo de Vida de Tarjeta:**
-   - `EN_INVENTARIO`: Fabricada y registrada, pero no comercializada ni habilitada para abordaje.
-   - `ACTIVE`: Vendida con cuenta asignada (con o sin `usuarioId`).
-   - `BLOCKED_DEUDA`: Bloqueo automático recuperable al saldar saldo negativo.
-   - `BLOCKED_FRAUDE`: Bloqueo administrativo definitivo, inmune a recargas.
-   - `BLOCKED_PERDIDA`: Bloqueo terminal e irreversible por extravío/robo.
-5. **Herencia en Pérdida:** Al reportar pérdida, la tarjeta anterior se bloquea terminalmente y la nueva tarjeta emitida **hereda**:
-   - Mismo `usuarioId`.
-   - Misma categoría tarifaria.
-   - Misma `cuentaId` (preservando saldo y deuda acumulada).
-6. **Origen de Recargas:** No existen recargas originadas desde apps móviles de usuarios. Solo kioscos físicos y pasarelas de pago autorizadas.
-7. **Desacoplamiento del Validador:** Los validadores físicos (ESP32) validan abordajes de forma 100% autónoma contra su lista negra local (Bloom Filter / lista en memoria). **Nunca** realizan consultas HTTP/gRPC síncronas al backend en el momento del abordaje.
+| Artefacto | Idioma |
+|---|---|
+| Identificadores Java (campos, métodos, clases, constantes, paquetes) | **Inglés** |
+| Valores de enumerados Java | **Inglés** (`UPPER_SNAKE_CASE`) |
+| Comentarios de código | Español |
+| Redacción de escenarios Gherkin (oraciones) | Español |
+| Palabras clave Gherkin (`Feature`, `Given`, `When`, `Then`...) | Inglés |
+| Nombres de campos citados dentro de oraciones Gherkin | **Inglés** (entre comillas: `"userId"`, `"fareCategory"`) |
 
 ---
 
-## 4. Convenciones de Desarrollo y Testing
+## 4. Tabla de Traducción de Identificadores Clave
 
-- **Gherkin:** Palabras clave en inglés (`Feature`, `Scenario`, `Given`, `When`, `Then`, `And`), redacción obligatoria en **español**.
+| Lenguaje de negocio (español) | Identificador Java | Entidad |
+|---|---|---|
+| Identificador de cuenta | `accountId` | `Account` |
+| Identificador de tarjeta | `cardId` | `Card` |
+| Identificador de usuario | `userId` | `Account` (nullable) |
+| Categoría tarifaria | `fareCategory` | `Account` |
+| Número de verificación | `verificationNumber` | `Card` |
+| Hash del código de seguridad | `securityCodeHash` | `Card` |
+| Agente de kiosco emisor | `kioskAgentId` | `Card` |
+| Límite de margen de deuda | `debtMarginLimit` | `Account` |
+| Saldo | `balance` | `Account` |
+| Tarifa | `fare` | `Trip` |
+| Marca de tiempo local | `localTimestamp` | `Trip` |
+| Estado de procesamiento | `processingStatus` | `Trip` |
+| Clave de idempotencia de recarga | `externalTransactionId` | `Recharge` |
+
+---
+
+## 5. Reglas Inmutables de Negocio (Resumen Autoritativo)
+
+1. **Identidad:** La entidad `User` **no** tiene roles. Un usuario puede administrar múltiples tarjetas.
+2. **Relación 1:1 Account-Card:** Toda `Account` pertenece de forma exclusiva a una única `Card` activa.
+3. **Cuentas Anónimas:** El campo `userId` reside en la **`Account`** (no en la `Card`) y puede ser `null`, indicando una cuenta anónima adquirida en kiosco. Esto es un modo de operación válido y esperado.
+4. **`fareCategory` en `Account`:** La categoría tarifaria también vive en `Account`, no en `Card`. Esto permite que un reemplazo por pérdida no requiera copiar ningún dato — la `Account` persiste sin cambios.
+5. **Ciclo de Vida de `Card` (`CardStatus`):**
+   - `IN_INVENTORY`: Fabricada, no vendida.
+   - `ACTIVE`: Vendida y activada (con o sin `userId` en su `Account`).
+   - `BLOCKED_DEBT`: Bloqueo automático recuperable al saldar saldo negativo.
+   - `FRAUD_BLOCKED`: Bloqueo administrativo definitivo, inmune a recargas.
+   - `LOST_REPORTED`: Bloqueo terminal e irreversible por extravío/robo.
+6. **`FareCategory` (`fareCategory`):**
+   - `GENERAL`: Sin documento, saldo inicial S/ 5.00, tarifa S/ 1.20.
+   - `SCHOOL`: DNI vigente, saldo inicial S/ 2.50, tarifa S/ 0.60.
+   - `UNIVERSITY`: Carnet universitario vigente, saldo inicial S/ 5.00, tarifa S/ 0.60.
+7. **Reemplazo por Pérdida:** La `Card` nueva apunta al mismo `accountId`. No se copia `userId` ni `fareCategory` porque nunca estuvieron en la `Card`.
+8. **Origen de Recargas:** No existen recargas originadas desde apps móviles. Solo `KIOSK` y `DIGITAL_GATEWAY`.
+9. **Desacoplamiento del Validador:** Los validadores físicos (ESP32) validan abordajes de forma 100% autónoma contra su lista negra local. **Nunca** realizan consultas HTTP/gRPC síncronas al backend en el momento del abordaje.
+
+---
+
+## 6. Convenciones de Desarrollo y Testing
+
+- **Gherkin:** Palabras clave en inglés, redacción en **español**, campos Java citados en inglés entre comillas.
 - **Prefijos de Identificadores en Pruebas:**
   - Cuentas: `CTA-XXX`
   - Tarjetas: `TRK-XXXX`
   - Transacciones / Recargas: `TRX-XXX`
   - Usuarios: `USR-XXX`
   - Buses / Validadores: `BUS-XXX`
-- **Arquitectura de Código (Java 21 / Spring Boot 3):**
-  - Arquitectura Hexagonal estricta: `domain`, `application` (ports & use cases), `infrastructure` (adapters: web, persistence, mqtt/amqp).
-  - Las entidades del dominio jamás deben exponerse en controladores REST (obligatoriedad de DTOs y mappers).
+  - Viajes: `VIA-XXX`
+  - Agentes de kiosco: `AGT-XXX`
+  - Puntos de recarga: `PRC-XXX`
+- **Arquitectura (Java 21 / Spring Boot 3):**
+  - Hexagonal estricta + Package by Feature: cada módulo de negocio (`account/`, `card/`, `trip/`, `blacklist/`) contiene sus propias capas `domain/`, `application/`, `adapter/`.
+  - Las entidades del dominio (`Account`, `Card`) **nunca** se exponen en controladores REST — obligatoriedad de DTOs (Java Records) y mappers.
+  - `AccountJpaEntity` y `Account` son clases **distintas** — el adaptador de persistencia traduce entre ellas.
+  - Un único `@RestControllerAdvice` en `shared/infrastructure/exception/GlobalExceptionHandler`.

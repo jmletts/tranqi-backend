@@ -42,6 +42,13 @@ public class Account {
         this.userId = newUserId;
     }
 
+    public void addBalance(Money amount) {
+        if (amount.amount().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto a recargar debe ser mayor a cero");
+        }
+        this.balance = this.balance.add(amount);
+    }
+
     public UUID getAccountId() { return accountId; }
     public Money getBalance() { return balance; }
     public Money getDebtMarginLimit() { return debtMarginLimit; }

@@ -14,6 +14,7 @@
 3. **No Creación de Cuenta:** La operación **no** crea una cuenta nueva. Se conserva estrictamente la `Cuenta` (`cuentaId`) y el saldo existente asociado a la tarjeta (`1:1`).
 4. **Multitarjeta por Usuario:** Un usuario identificado con `usuarioId` (`USR-XXX`) puede tener múltiples tarjetas asociadas a su perfil simultáneamente.
 5. **Existencia del Usuario:** El identificador de usuario `usuarioId` debe existir previamente en el repositorio de usuarios.
+6. **Proceso de Activación:** La operacion de vicullacion se remite al uso de dos codigo de sgiridad que vendra en un tarjeta fisica, contara de dos 
 
 ---
 

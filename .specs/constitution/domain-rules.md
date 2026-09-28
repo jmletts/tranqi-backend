@@ -1,68 +1,204 @@
 # Constitución del Dominio: Reglas Inmutables y Agregados
 
-Este documento define la verdad autoritativa e inmutable del modelo de negocio del sistema **Tranki**. Toda especificación de historia de usuario, escenario Gherkin y código productivo debe adherirse estrictamente a estas reglas.
+Este documento define la **verdad autoritativa e inmutable** del modelo de negocio del sistema **Tranki**.
+Toda especificación de historia de usuario, escenario Gherkin y código productivo debe adherirse estrictamente a estas reglas.
+
+> **Nota de idioma:** Todos los identificadores del código Java (campos, métodos, clases, constantes, paquetes)
+> se escriben en **inglés**. La documentación, comentarios y redacción de escenarios Gherkin permanecen en español.
 
 ---
 
-## 1. Modelo de Identidad y Usuarios
+## 1. Tabla de Traducción de Campos (Lenguaje Ubicuo → Java)
 
-1. **Ausencia de Jerarquías o Roles:** La entidad `Usuario` **no** posee roles de tipo jerárquico como `TITULAR`, `TUTOR` o `SUBORDINADO`.
-2. **Capacidad de Gestión Multitarjeta:** Un mismo `Usuario` puede poseer y administrar múltiples tarjetas registradas bajo su perfil personal.
-3. **Desvinculación Obligatoria Inicial:** Las tarjetas recién fabricadas o comercializadas nacen sin titular obligatorio.
+Esta tabla es la fuente de verdad para evitar inconsistencias entre el lenguaje de negocio (español) y el código.
+
+| Lenguaje de negocio (español) | Identificador Java | Tipo Java | Entidad |
+|---|---|---|---|
+| Identificador de cuenta | `accountId` | `UUID` | `Account` |
+| Identificador de tarjeta (UID NFC) | `cardId` | `String` | `Card` |
+| Identificador de usuario | `userId` | `UUID` | `Account` (nullable) |
+| Identificador de recarga | `rechargeId` | `UUID` | `Recharge` |
+| Identificador de viaje | `tripId` | `UUID` | `Trip` |
+| Identificador de punto de recarga | `rechargePointId` | `UUID` | `RechargePoint` |
+| Identificador de agente de kiosco | `kioskAgentId` | `UUID` | `Card` |
+| Número de verificación (12 dígitos) | `verificationNumber` | `String` | `Card` |
+| Hash del código de seguridad | `securityCodeHash` | `String` | `Card` |
+| Categoría tarifaria | `fareCategory` | `FareCategory` (enum) | `Account` |
+| Límite de margen de deuda | `debtMarginLimit` | `Money` | `Account` |
+| Saldo | `balance` | `Money` | `Account` |
+| Estado de la tarjeta | `cardStatus` | `CardStatus` (enum) | `Card` |
+| Estado de la cuenta | `accountStatus` | `AccountStatus` (enum) | `Account` |
+| Estado de procesamiento del viaje | `processingStatus` | `TripProcessingStatus` (enum) | `Trip` |
+| Marca de tiempo local del validador | `localTimestamp` | `LocalDateTime` | `Trip` |
+| Tarifa del viaje | `fare` | `Money` | `Trip` |
+| ¿Fue viaje en deuda? | `wasDebtTrip` | `boolean` | `Trip` |
+| Clave de idempotencia de recarga | `externalTransactionId` | `String` | `Recharge` |
+| Motivo de bloqueo en lista negra | `blockReason` | `BlockReason` (enum) | `BlacklistEntry` |
+| Viajes en deuda restantes | `remainingDebtTrips` | `int` | `BlacklistEntry` |
 
 ---
 
-## 2. Relación 1:1 Invariable entre Cuenta y Tarjeta
+## 2. Enumerados del Dominio (Enum Values en UPPER_SNAKE_CASE)
 
-1. **Exclusividad:** Toda `Cuenta` pertenece de manera exclusiva a exactamente una `Tarjeta` (`1:1`).
-2. **Inexistencia de Cuentas Compartidas:** No existen cuentas compartidas entre múltiples tarjetas físicas. Cada tarjeta física tiene su propio balance contable, saldo y registro de movimientos asociado a su identificador de cuenta (`cuentaId`).
+### `CardStatus` — Estados de la Tarjeta
 
----
-
-## 3. Tarjetas Anónimas y Propiedad del Vínculo
-
-1. **Ubicación del Vínculo:** La referencia `usuarioId` reside directamente en la entidad `Tarjeta`, no en la `Cuenta`.
-2. **Nulidad Permitida (`usuarioId` = null):** Cuando `usuarioId` es nulo, la tarjeta es **anónima**.
-3. **Operación en Kiosco:** Las tarjetas anónimas pueden ser adquiridas, recargadas y utilizadas para abordar mediante kioscos físicos sin necesidad de registro personal ni autenticación de usuario.
-
----
-
-## 4. Ciclo de Vida y Estados de la Tarjeta
-
-| Estado | Significado de Negocio | ¿Permite Abordaje? | ¿Permite Recarga? |
+| Valor | Significado | ¿Permite Abordaje? | ¿Permite Recarga? |
 |---|---|:---:|:---:|
-| `EN_INVENTARIO` | Tarjeta física producida y serializada, en almacén. No ha sido vendida ni activada. No tiene cuenta activa. | No | No |
-| `ACTIVE` | Tarjeta vendida y activada con cuenta asociada (con o sin `usuarioId`). Saldo en rango operativo. | Sí | Sí |
-| `BLOCKED_DEUDA` | Saldo inferior al margen de deuda permitido o saldo negativo en sincronización. Se levanta de forma automática tras recargar saldo positivo. | No (en lista negra) | Sí |
-| `BLOCKED_FRAUDE` | Bloqueo administrativo forzoso por sospecha o confirmación de alteración/fraude. **No se levanta con recargas**. | No (en lista negra) | No |
-| `BLOCKED_PERDIDA` | Bloqueo terminal irreversible solicitado por el usuario al reportar extravío o robo. Tarjeta dada de baja definitiva. | No (en lista negra) | No |
+| `IN_INVENTORY` | Fabricada, en almacén, no vendida | No | No |
+| `ACTIVE` | Vendida y activada (con o sin `userId`) | Sí | Sí |
+| `BLOCKED_DEBT` | Saldo inferior al `debtMarginLimit`. Se levanta al recargar. | No | Sí |
+| `FRAUD_BLOCKED` | Bloqueo administrativo por fraude. **No** se levanta con recargas. | No | No |
+| `LOST_REPORTED` | Bloqueo terminal e irreversible por extravío/robo. | No | No |
+
+> **CORRECCIÓN respecto a versión anterior:** Los estados `BLOCKED_FRAUDE` y `BLOCKED_PERDIDA` del lenguaje ubicuo
+> español se traducen a `FRAUD_BLOCKED` y `LOST_REPORTED` en Java. El estado `BLOCKED_DEUDA` del lenguaje ubicuo
+> se traduce a `BLOCKED_DEBT`. `EN_INVENTARIO` se traduce a `IN_INVENTORY`.
+
+### `FareCategory` — Categoría Tarifaria
+
+| Valor | Documento requerido | Saldo inicial | Tarifa de abordaje |
+|---|---|---|---|
+| `GENERAL` | Ninguno | S/ 5.00 | S/ 1.20 |
+| `SCHOOL` | DNI vigente | S/ 2.50 | S/ 0.60 |
+| `UNIVERSITY` | Carnet universitario vigente | S/ 5.00 | S/ 0.60 |
+
+> **CORRECCIÓN:** Los valores del lenguaje ubicuo `ESCOLAR` y `UNIVERSITARIO` se traducen a `SCHOOL` y `UNIVERSITY`
+> en Java. La categoría `ADULTO_MAYOR` **no existe** en el modelo actual.
+
+### `BlockReason` — Motivo de entrada en Lista Negra
+
+| Valor | Política de purga |
+|---|---|
+| `DEBT` | Nunca se purga por tiempo; se retira solo al pagar la deuda. |
+| `LOST_STOLEN` | Se purga automáticamente a los 90 días del reporte. |
+| `FRAUD` | Nunca se purga automáticamente; requiere revisión administrativa explícita. |
+
+### `RechargePointType` — Tipo de punto de recarga
+
+| Valor | Descripción |
+|---|---|
+| `KIOSK` | Terminal físico de autoservicio o taquilla presencial. |
+| `DIGITAL_GATEWAY` | Pasarela autorizada de cobro / webhook bancario. |
+
+### `TripProcessingStatus` — Estado de procesamiento del viaje
+
+| Valor | Descripción |
+|---|---|
+| `PENDING` | Recibido en el lote, pendiente de procesamiento. |
+| `PROCESSED` | Procesado y debitado correctamente. |
+| `DISCARDED_DUPLICATE` | Descartado por `tripId` ya registrado (idempotencia). |
 
 ---
 
-## 5. Regla de Herencia en Reporte de Pérdida
+## 3. Agregados Raíz y Entidades
 
-Al reportar una tarjeta como perdida o robada (`reportar_tarjeta_perdida`):
-1. La tarjeta física comprometida cambia inmediatamente a estado `BLOCKED_PERDIDA` y es añadida a la Lista Negra para su distribución a validadores.
-2. Se emite una nueva tarjeta física de reemplazo.
-3. La nueva tarjeta de reemplazo **DEBE heredar**:
-   - El mismo `usuarioId` del titular.
-   - La misma categoría tarifaria (ej. `ESTUDIANTE`, `ADULTO_MAYOR`, `GENERAL`).
-   - La **misma `cuentaId`** de la tarjeta anterior (preservando íntegramente el saldo acumulado o el saldo negativo pendiente).
+### `Account` (Agregado Raíz — Contexto: Cuentas)
+Campos Java:
+```java
+UUID accountId
+Money balance
+Money debtMarginLimit   // valor fijo del sistema, ej. -3.00
+AccountStatus status    // ACTIVE | BLOCKED_DEBT
+UUID userId             // nullable — null = cuenta anónima
+FareCategory fareCategory
+```
+
+> **Regla crítica:** `userId` y `fareCategory` viven en `Account`, **no** en `Card`. Esto garantiza que un
+> reemplazo de tarjeta por pérdida no requiera copiar ningún dato — la `Account` persiste intacta.
+
+### `Card` (Agregado Raíz — Contexto: Tarjetas)
+Campos Java:
+```java
+String cardId              // UID del chip NFC
+UUID accountId             // referencia a su Account
+CardStatus cardStatus
+String verificationNumber  // 12 dígitos, único globalmente, generado con SecureRandom
+String securityCodeHash    // hash de 4 dígitos tipo CVV, nunca en texto plano
+UUID kioskAgentId          // agente que realizó la emisión, para auditoría
+```
+
+### `Trip` (Agregado Raíz — Contexto: Viajes)
+Campos Java:
+```java
+UUID tripId
+UUID accountId
+String cardId
+String validatorId
+Money fare
+LocalDateTime localTimestamp
+boolean wasDebtTrip
+TripProcessingStatus processingStatus
+```
+
+### `Recharge` (Agregado Raíz — Contexto: Recargas)
+Campos Java:
+```java
+UUID rechargeId
+String externalTransactionId  // clave de idempotencia
+UUID accountId
+Money amount
+UUID rechargePointId
+RechargeStatus status         // PENDING | CONFIRMED | FAILED
+```
+
+### `BlacklistEntry` (Contexto: Lista Negra)
+Campos Java:
+```java
+String cardId
+BlockReason blockReason
+int remainingDebtTrips
+```
+
+---
+
+## 4. Invariantes de Dominio por Agregado
+
+### `Account`
+1. El `balance` no puede quedar por debajo de `debtMarginLimit` tras una transferencia.
+2. Una `Account` con `userId = null` es anónima; esto es un modo de operación válido, no un estado de error.
+3. El `fareCategory` solo puede cambiar mediante el comando `ChangeFareCategory`, ejecutado por un `KioskAgent` con validación de documento.
+
+### `Card`
+1. El `verificationNumber` debe ser único globalmente. Se genera con `SecureRandom`; ante colisión, se regenera hasta 5 veces.
+2. El `securityCodeHash` nunca se almacena ni compara en texto plano.
+3. La vinculación (`userId` de la `Account`) se bloquea definitivamente tras 5 intentos fallidos consecutivos con `securityCode` incorrecto.
+4. Una `Card` en estado `LOST_REPORTED` o `FRAUD_BLOCKED` no puede cambiar de `FareCategory`.
+5. Solo una `Card` en estado `ACTIVE` puede ser reportada como perdida.
+
+### `Recharge`
+1. No existen recargas originadas desde la aplicación móvil del usuario en esta fase.
+2. Canales autorizados: `KIOSK` (presencial) y `DIGITAL_GATEWAY` (webhook bancario).
+3. El campo `externalTransactionId` garantiza idempotencia — una recarga con el mismo ID no se procesa dos veces.
+
+### `Trip`
+1. El `tripId` es la clave de idempotencia en lote — duplicados se descartan con estado `DISCARDED_DUPLICATE`.
+2. El `localTimestamp` no puede ser una fecha futura respecto al momento de procesamiento en el backend.
+3. Si procesar un viaje lleva el `balance` por debajo del `debtMarginLimit`, el viaje se registra igual (no se revierte) pero queda marcado para revisión de exceso de deuda.
+
+---
+
+## 5. Reglas de Reemplazo por Pérdida (Simplificadas por el Diseño)
+
+Al reportar una `Card` como perdida:
+1. La `Card` original pasa a `LOST_REPORTED` y se publica en la lista negra con motivo `LOST_STOLEN`.
+2. La `Card` de reemplazo recibe un nuevo `cardId`, `verificationNumber` y `securityCodeHash`.
+3. La `Card` de reemplazo apunta al **mismo `accountId`** que la original.
+4. No se copia `userId` ni `fareCategory` porque **nunca estuvieron en la `Card`** — siempre residieron en la `Account`, que no cambia.
 
 ---
 
 ## 6. Origen Restringido de Recargas
 
-1. **Exclusión de Aplicación Móvil:** No existen flujos de recarga directa iniciados desde una aplicación móvil de usuario (billetera digital interactiva).
-2. **Canales Autorizados:** Toda recarga financiera de saldo proviene exclusivamente de:
-   - Terminales físicos de autoservicio o taquilla (**Kioscos**).
-   - Pasarelas autorizadas de cobro / Webhook bancario que confirman un pago externo.
+- **Fuera de alcance (fase actual):** recargas iniciadas desde la aplicación móvil del usuario.
+- **Canales autorizados:**
+  - `KIOSK`: Terminal físico presencial, operado por un `KioskAgent`.
+  - `DIGITAL_GATEWAY`: Webhook/pasarela de pago externa que notifica el backend.
 
 ---
 
 ## 7. Desacoplamiento Operativo del Validador Físico (ESP32)
 
-1. **Autonomía Total Offline:** La decisión de permitir o rechazar el abordaje de un pasajero se toma en el microcontrolador ESP32 mediante su estructura de datos local (Bloom Filter / hash table local de lista negra).
-2. **Cero Dependencia Online en Abordaje:** El validador **jamás** emite peticiones de red síncronas al backend central para consultar saldo o autorización en el momento en que la tarjeta es aproximada al lector NFC.
-3. **Margen de Crédito de Emergencia (Deuda Local):** El validador puede autorizar abordaje si el saldo restante en la tarjeta física cubre la tarifa o si se encuentra dentro del margen de deuda negativa permitido (`MARGEN_DEUDA_MAXIMO`).
-4. **Sincronización Asíncrona:** Los registros de abordaje se guardan en la memoria persistente del validador y se despachan en lotes (`procesar_lote_viajes`) al backend central cuando el vehículo entra en cobertura de red.
+1. **Autonomía total offline:** la decisión de autorizar o rechazar el abordaje se toma localmente contra la lista negra en memoria del validador (Bloom Filter / hash table).
+2. **Sin consultas síncronas al backend:** el validador nunca hace peticiones HTTP/gRPC en el momento del abordaje.
+3. **Margen de crédito de emergencia:** el validador puede autorizar abordaje si el saldo cubre la tarifa o si queda dentro del `debtMarginLimit` (`DEBT_MARGIN_LIMIT` como constante en el firmware).
+4. **Sincronización asíncrona:** los registros de viaje se despachan en lotes al backend cuando el vehículo recupera cobertura de red.

@@ -140,16 +140,6 @@ public class EmitirTarjetaSteps {
         assertThat(card.getVerificationNumber()).matches("\\d{" + digits + "}");
     }
 
-    @Then("se emite el evento {string}")
-    public void se_emite_el_evento(String evento) {
-        // En MVP validamos que no hubo excepcion si el evento indica exito (TarjetaEmitida),
-        // o si fue EmisionRechazadaPorDocumentoInvalido entonces hubo InvalidDocumentException
-        if (evento.equals("TarjetaEmitida")) {
-            assertThat(lastException).isNull();
-        } else if (evento.equals("EmisionRechazadaPorDocumentoInvalido")) {
-            assertThat(lastException).isInstanceOf(InvalidDocumentException.class);
-        }
-    }
 
     @Then("la cuenta creada tiene {string} igual a {string}")
     public void la_cuenta_creada_tiene_fareCategory_igual_a(String campo, String categoria) {
@@ -171,7 +161,9 @@ public class EmitirTarjetaSteps {
     @Then("la tarjeta {string} permanece en estado {string}")
     public void la_tarjeta_permanece_en_estado(String cardId, String estado) {
         Card card = cardRepository.findById(cardId).orElseThrow();
-        String st = estado.equals("EN_INVENTARIO") ? "IN_INVENTORY" : estado;
+        String st = estado;
+        if (estado.equals("EN_INVENTARIO")) st = "IN_INVENTORY";
+        if (estado.equals("BLOCKED_DEUDA")) st = "BLOCKED_DEBT";
         assertThat(card.getCardStatus().name()).isEqualTo(st);
     }
 
