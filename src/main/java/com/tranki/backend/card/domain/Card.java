@@ -9,18 +9,38 @@ public class Card {
     private String verificationNumber;
     private String securityCodeHash;
     private UUID kioskAgentId;
+    private int failedLinkAttempts;
 
     public Card(String cardId, UUID accountId, CardStatus cardStatus, String verificationNumber, String securityCodeHash, UUID kioskAgentId) {
+        this(cardId, accountId, cardStatus, verificationNumber, securityCodeHash, kioskAgentId, 0);
+    }
+
+    public Card(String cardId, UUID accountId, CardStatus cardStatus, String verificationNumber, String securityCodeHash, UUID kioskAgentId, int failedLinkAttempts) {
         this.cardId = cardId;
         this.accountId = accountId;
         this.cardStatus = cardStatus;
         this.verificationNumber = verificationNumber;
         this.securityCodeHash = securityCodeHash;
         this.kioskAgentId = kioskAgentId;
+        this.failedLinkAttempts = failedLinkAttempts;
     }
 
     public static Card createInventoryCard(String cardId) {
         return new Card(cardId, null, CardStatus.IN_INVENTORY, null, null, null);
+    }
+
+    public void validateAndRegisterLinkAttempt(String plainSecurityCode, PasswordEncoderPort encoder) {
+        if (this.failedLinkAttempts >= 5) {
+            throw new MaxLinkAttemptsExceededException("Se ha excedido el numero maximo de intentos permitidos.");
+        }
+        if (!encoder.matches(plainSecurityCode, this.securityCodeHash)) {
+            this.failedLinkAttempts++;
+            if (this.failedLinkAttempts >= 5) {
+                throw new MaxLinkAttemptsExceededException("Se ha excedido el numero maximo de intentos permitidos.");
+            }
+            throw new InvalidSecurityCodeException("Codigo de seguridad invalido.");
+        }
+        this.failedLinkAttempts = 0;
     }
 
     public void issue(UUID accountId, UUID kioskAgentId, String verificationNumber, String securityCodeHash) {
@@ -40,4 +60,5 @@ public class Card {
     public String getVerificationNumber() { return verificationNumber; }
     public String getSecurityCodeHash() { return securityCodeHash; }
     public UUID getKioskAgentId() { return kioskAgentId; }
+    public int getFailedLinkAttempts() { return failedLinkAttempts; }
 }

@@ -35,6 +35,13 @@ public class Account {
         this.fareCategory = newCategory;
     }
 
+    public void linkUser(UUID newUserId) {
+        if (this.userId != null) {
+            throw new IllegalStateException("Account is already linked to a user");
+        }
+        this.userId = newUserId;
+    }
+
     public UUID getAccountId() { return accountId; }
     public Money getBalance() { return balance; }
     public Money getDebtMarginLimit() { return debtMarginLimit; }

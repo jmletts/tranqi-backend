@@ -18,6 +18,9 @@ public class CardJpaEntity {
     private String verificationNumber;
     private String securityCodeHash;
     private UUID kioskAgentId;
+    
+    @Column(name = "failed_link_attempts")
+    private Integer failedLinkAttempts = 0;
 
     public CardJpaEntity() {}
 
@@ -33,4 +36,6 @@ public class CardJpaEntity {
     public void setSecurityCodeHash(String securityCodeHash) { this.securityCodeHash = securityCodeHash; }
     public UUID getKioskAgentId() { return kioskAgentId; }
     public void setKioskAgentId(UUID kioskAgentId) { this.kioskAgentId = kioskAgentId; }
+    public Integer getFailedLinkAttempts() { return failedLinkAttempts; }
+    public void setFailedLinkAttempts(Integer failedLinkAttempts) { this.failedLinkAttempts = failedLinkAttempts; }
 }
