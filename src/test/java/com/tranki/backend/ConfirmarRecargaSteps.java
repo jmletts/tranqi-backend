@@ -164,6 +164,18 @@ public class ConfirmarRecargaSteps {
                 eventsCount = applicationEvents.stream(TransferRejectedByUnauthorizedAccountEvent.class).count();
                 assertThat(eventsCount).isGreaterThan(0);
                 break;
+            case "ViajeProcesadoConExito":
+                eventsCount = applicationEvents.stream(com.tranki.backend.shared.domain.events.TripProcessedSuccessfullyEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
+            case "ViajeDescartadoPorDuplicado":
+                eventsCount = applicationEvents.stream(com.tranki.backend.shared.domain.events.TripDiscardedForDuplicateEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
+            case "ViajeGeneroExcesoDeDeudaRequiereRevision":
+                eventsCount = applicationEvents.stream(com.tranki.backend.shared.domain.events.TripGeneratedExcessDebtRequiresReviewEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
             default:
                 // Para eventos de historias anteriores (US-01, US-02, US-03) que aún no
                 // implementan publicacion real a traves de ApplicationEventPublisher,

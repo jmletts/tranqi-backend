@@ -6,3 +6,4 @@ com/tranki/backend/TransferirDineroSteps.class
 com/tranki/backend/ConfigurarTarjetaSteps.class
 com/tranki/backend/CambiarCategoriaSteps.class
 com/tranki/backend/EmitirTarjetaSteps.class
+com/tranki/backend/ProcesarLoteViajesSteps.class

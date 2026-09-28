@@ -60,6 +60,13 @@ public class Account {
         this.balance = resultingBalance;
     }
 
+    public void forceSubtractBalance(Money amount) {
+        if (amount.amount().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto a restar debe ser mayor a cero");
+        }
+        this.balance = this.balance.subtract(amount);
+    }
+
     public UUID getAccountId() { return accountId; }
     public Money getBalance() { return balance; }
     public Money getDebtMarginLimit() { return debtMarginLimit; }
