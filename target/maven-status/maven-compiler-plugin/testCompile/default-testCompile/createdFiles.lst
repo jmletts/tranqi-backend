@@ -1,7 +1,8 @@
+com/tranki/backend/CucumberSpringConfiguration.class
+com/tranki/backend/ConsultarMovimientosSteps.class
 com/tranki/backend/ConfirmarRecargaSteps.class
 com/tranki/backend/CucumberTest.class
 com/tranki/backend/TransferirDineroSteps.class
 com/tranki/backend/ConfigurarTarjetaSteps.class
 com/tranki/backend/CambiarCategoriaSteps.class
-com/tranki/backend/CucumberSpringConfiguration.class
 com/tranki/backend/EmitirTarjetaSteps.class

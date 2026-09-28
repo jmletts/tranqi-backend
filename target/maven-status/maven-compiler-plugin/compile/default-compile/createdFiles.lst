@@ -4,6 +4,7 @@ com/tranki/backend/account/domain/RechargeTransaction.class
 com/tranki/backend/account/application/TransferFundsUseCase.class
 com/tranki/backend/shared/domain/events/RechargeRejectedAccountNotFoundEvent.class
 com/tranki/backend/account/adapter/out/persistence/RechargePersistenceAdapter.class
+com/tranki/backend/account/domain/AccountMovement.class
 com/tranki/backend/card/application/LinkCardToUserUseCase.class
 com/tranki/backend/shared/domain/events/TransferRejectedByUnauthorizedAccountEvent.class
 com/tranki/backend/card/adapter/out/validator/StubUserRepositoryAdapter.class
@@ -17,13 +18,16 @@ com/tranki/backend/card/domain/CardBlockedException.class
 com/tranki/backend/account/domain/FareCategory.class
 com/tranki/backend/card/domain/MaxLinkAttemptsExceededException.class
 com/tranki/backend/card/adapter/in/web/dto/LinkCardRequestDTO.class
+com/tranki/backend/account/adapter/out/persistence/MovementJpaEntity.class
 com/tranki/backend/account/adapter/in/web/AccountController.class
 com/tranki/backend/account/application/RechargeAccountUseCase.class
 com/tranki/backend/account/adapter/in/web/dto/TransferRequestDTO.class
 com/tranki/backend/account/adapter/out/persistence/RechargeJpaEntity.class
 com/tranki/backend/card/adapter/in/web/dto/IssueCardRequestDTO.class
+com/tranki/backend/account/adapter/in/web/dto/AccountMovementsResponseDTO.class
 com/tranki/backend/TrankiApplication.class
 com/tranki/backend/card/domain/PasswordEncoderPort.class
+com/tranki/backend/account/adapter/out/persistence/AccountMovementPersistenceAdapter.class
 com/tranki/backend/account/domain/AccountStatus.class
 com/tranki/backend/account/adapter/in/web/dto/RechargeRequestDTO.class
 com/tranki/backend/account/adapter/out/persistence/AccountPersistenceAdapter.class
@@ -42,6 +46,8 @@ com/tranki/backend/shared/domain/Money.class
 com/tranki/backend/card/domain/UserRepositoryPort.class
 com/tranki/backend/account/adapter/out/persistence/RechargeJpaRepository.class
 com/tranki/backend/card/adapter/out/persistence/CardJpaEntity.class
+com/tranki/backend/account/adapter/out/persistence/MovementJpaRepository.class
+com/tranki/backend/account/application/GetAccountMovementsUseCase.class
 com/tranki/backend/shared/domain/events/TransferConfirmedEvent.class
 com/tranki/backend/shared/domain/events/BlacklistRemovalOrderEvent.class
 com/tranki/backend/card/adapter/in/web/CardController.class
@@ -49,3 +55,4 @@ com/tranki/backend/card/adapter/out/validator/StubPasswordEncoderAdapter.class
 com/tranki/backend/card/adapter/out/validator/StubDocumentValidatorAdapter.class
 com/tranki/backend/card/adapter/in/web/dto/ChangeFareCategoryRequestDTO.class
 com/tranki/backend/card/adapter/out/persistence/CardJpaRepository.class
+com/tranki/backend/account/domain/AccountMovementRepository.class

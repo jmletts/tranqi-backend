@@ -1,6 +1,7 @@
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/CambiarCategoriaSteps.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/ConfigurarTarjetaSteps.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/ConfirmarRecargaSteps.java
+/home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/ConsultarMovimientosSteps.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/CucumberSpringConfiguration.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/CucumberTest.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/EmitirTarjetaSteps.java

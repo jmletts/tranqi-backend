@@ -43,7 +43,19 @@ public class CambiarCategoriaSteps {
         UUID accountId = UUID.nameUUIDFromBytes(accountIdStr.getBytes());
         CardStatus cStatus = estadoTarjeta.equals("BLOQUEADA_FRAUDE") ? CardStatus.FRAUD_BLOCKED : CardStatus.valueOf(estadoTarjeta);
         
-        Account account = new Account(accountId, Money.of("10.00"), Money.of("-3.00"), AccountStatus.ACTIVE, null, FareCategory.valueOf(mapCategoria(categoria)));
+        FareCategory fareCat = FareCategory.GENERAL;
+        UUID userId = null;
+
+        if (fieldName.equals("fareCategory")) {
+            fareCat = FareCategory.valueOf(mapCategoria(categoria));
+        } else if (fieldName.equals("userId")) {
+            if (!categoria.equals("nulo")) {
+                userId = UUID.nameUUIDFromBytes(categoria.getBytes());
+            }
+        }
+
+        // Sobrescribir siempre para evitar contaminación entre escenarios
+        Account account = new Account(accountId, Money.of("10.00"), Money.of("-3.00"), AccountStatus.ACTIVE, userId, fareCat);
         accountRepository.save(account);
 
         Card card = new Card(cardId, accountId, cStatus, "VER-" + cardId, "HASH", null);
