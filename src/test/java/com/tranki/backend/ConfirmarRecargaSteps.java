@@ -13,6 +13,9 @@ import com.tranki.backend.shared.domain.events.AccountUnlockedByRechargeEvent;
 import com.tranki.backend.shared.domain.events.BlacklistRemovalOrderEvent;
 import com.tranki.backend.shared.domain.events.RechargeConfirmedEvent;
 import com.tranki.backend.shared.domain.events.RechargeRejectedAccountNotFoundEvent;
+import com.tranki.backend.shared.domain.events.TransferConfirmedEvent;
+import com.tranki.backend.shared.domain.events.TransferRejectedByDebtLimitEvent;
+import com.tranki.backend.shared.domain.events.TransferRejectedByUnauthorizedAccountEvent;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -147,6 +150,18 @@ public class ConfirmarRecargaSteps {
                 break;
             case "RecargaRechazadaPorCuentaInexistente":
                 eventsCount = applicationEvents.stream(RechargeRejectedAccountNotFoundEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
+            case "TransferenciaConfirmada":
+                eventsCount = applicationEvents.stream(TransferConfirmedEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
+            case "TransferenciaRechazadaPorLimiteDeuda":
+                eventsCount = applicationEvents.stream(TransferRejectedByDebtLimitEvent.class).count();
+                assertThat(eventsCount).isGreaterThan(0);
+                break;
+            case "TransferenciaRechazadaPorCuentaNoAutorizada":
+                eventsCount = applicationEvents.stream(TransferRejectedByUnauthorizedAccountEvent.class).count();
                 assertThat(eventsCount).isGreaterThan(0);
                 break;
             default:
