@@ -49,6 +49,17 @@ public class Account {
         this.balance = this.balance.add(amount);
     }
 
+    public void subtractBalance(Money amount) {
+        if (amount.amount().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El monto a restar debe ser mayor a cero");
+        }
+        Money resultingBalance = this.balance.subtract(amount);
+        if (resultingBalance.isLessThan(this.debtMarginLimit)) {
+            throw new IllegalStateException("Saldo insuficiente: supera el margen de deuda permitido");
+        }
+        this.balance = resultingBalance;
+    }
+
     public UUID getAccountId() { return accountId; }
     public Money getBalance() { return balance; }
     public Money getDebtMarginLimit() { return debtMarginLimit; }

@@ -1,6 +1,7 @@
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/TrankiApplication.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/in/web/AccountController.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/in/web/dto/RechargeRequestDTO.java
+/home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/in/web/dto/TransferRequestDTO.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/out/persistence/AccountJpaEntity.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/out/persistence/AccountJpaRepository.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/out/persistence/AccountPersistenceAdapter.java
@@ -8,6 +9,7 @@
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/out/persistence/RechargeJpaRepository.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/adapter/out/persistence/RechargePersistenceAdapter.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/application/RechargeAccountUseCase.java
+/home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/application/TransferFundsUseCase.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/domain/Account.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/domain/AccountRepository.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/account/domain/AccountStatus.java
@@ -44,3 +46,6 @@
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/BlacklistRemovalOrderEvent.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/RechargeConfirmedEvent.java
 /home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/RechargeRejectedAccountNotFoundEvent.java
+/home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/TransferConfirmedEvent.java
+/home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/TransferRejectedByDebtLimitEvent.java
+/home/joaquin/Documentos/tranqi-backend/src/main/java/com/tranki/backend/shared/domain/events/TransferRejectedByUnauthorizedAccountEvent.java

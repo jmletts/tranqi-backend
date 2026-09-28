@@ -4,3 +4,4 @@
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/CucumberSpringConfiguration.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/CucumberTest.java
 /home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/EmitirTarjetaSteps.java
+/home/joaquin/Documentos/tranqi-backend/src/test/java/com/tranki/backend/TransferirDineroSteps.java
