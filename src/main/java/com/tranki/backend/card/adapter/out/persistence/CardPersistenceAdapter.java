@@ -23,6 +23,7 @@ public class CardPersistenceAdapter implements CardRepository {
         entity.setVerificationNumber(card.getVerificationNumber());
         entity.setSecurityCodeHash(card.getSecurityCodeHash());
         entity.setKioskAgentId(card.getKioskAgentId());
+        entity.setFailedLinkAttempts(card.getFailedLinkAttempts());
         
         repository.save(entity);
         return card;
@@ -36,7 +37,8 @@ public class CardPersistenceAdapter implements CardRepository {
             entity.getCardStatus(),
             entity.getVerificationNumber(),
             entity.getSecurityCodeHash(),
-            entity.getKioskAgentId()
+            entity.getKioskAgentId(),
+            entity.getFailedLinkAttempts() != null ? entity.getFailedLinkAttempts() : 0
         ));
     }
 
@@ -48,7 +50,8 @@ public class CardPersistenceAdapter implements CardRepository {
             entity.getCardStatus(),
             entity.getVerificationNumber(),
             entity.getSecurityCodeHash(),
-            entity.getKioskAgentId()
+            entity.getKioskAgentId(),
+            entity.getFailedLinkAttempts() != null ? entity.getFailedLinkAttempts() : 0
         ));
     }
 
