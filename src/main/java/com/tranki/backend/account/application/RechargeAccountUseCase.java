@@ -42,6 +42,10 @@ public class RechargeAccountUseCase {
             throw new IllegalArgumentException("El monto a recargar debe ser mayor a cero");
         }
 
+        if (request.amount().compareTo(new BigDecimal("100.00")) > 0) {
+            throw new IllegalArgumentException("El monto excede el limite maximo permitido de S/ 100.00");
+        }
+
         if (rechargeTransactionRepository.existsById(request.transactionId())) {
             // Idempotencia: si ya se procesó, no hacemos nada ni lanzamos error
             return;
