@@ -56,3 +56,7 @@ Feature: Confirmación de recarga de saldo en cuenta
     When se procesa una recarga con identificador "TRX-699" por un monto de 10.00 en la tarjeta "TRK-9999" con origen "KIOSCO"
     Then la solicitud de recarga es rechazada por cuenta inexistente
     And se emite el evento "RecargaRechazadaPorCuentaInexistente"
+
+  Scenario: Rechazo de recarga que supera el monto máximo permitido
+    When se procesa una recarga con identificador "TRX-690" por un monto de 150.00 en la tarjeta "TRK-6001" con origen "KIOSCO"
+    Then la solicitud de recarga es rechazada por exceder el monto maximo permitido

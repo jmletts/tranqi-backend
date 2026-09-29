@@ -218,4 +218,10 @@ public class ConfirmarRecargaSteps {
         assertThat(lastException).isInstanceOf(IllegalArgumentException.class)
                                  .hasMessageContaining("Cuenta inexistente");
     }
+
+    @Then("la solicitud de recarga es rechazada por exceder el monto maximo permitido")
+    public void solicitud_recarga_rechazada_monto_maximo() {
+        assertThat(lastException).isInstanceOf(IllegalArgumentException.class)
+                                 .hasMessageContaining("El monto excede el limite maximo permitido");
+    }
 }
