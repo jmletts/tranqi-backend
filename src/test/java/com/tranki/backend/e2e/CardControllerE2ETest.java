@@ -116,6 +116,20 @@ public class CardControllerE2ETest extends BaseE2ETest {
         cardJpaRepository.save(card);
 
         UUID userId = UUID.randomUUID();
+        com.tranki.backend.iam.adapter.out.persistence.UserJpaEntity user = new com.tranki.backend.iam.adapter.out.persistence.UserJpaEntity(
+            userId,
+            "DNI" + userId.toString().substring(0, 5),
+            "User Test",
+            "999999999",
+            "test@test.com",
+            25,
+            "Address",
+            com.tranki.backend.account.domain.FareCategory.GENERAL,
+            "hash",
+            java.util.List.of(com.tranki.backend.iam.domain.Role.USUARIO_FINAL)
+        );
+        userJpaRepository.save(user);
+
         LinkCardRequestDTO request = new LinkCardRequestDTO("TRK-LINK", userId, "1234");
 
         ResponseEntity<Void> response = restTemplate.postForEntity("/api/v1/cards/TRK-LINK/link", request, Void.class);

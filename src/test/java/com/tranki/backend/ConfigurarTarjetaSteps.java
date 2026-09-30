@@ -38,14 +38,36 @@ public class ConfigurarTarjetaSteps {
     private Exception lastException;
     private Money balanceSnapshot;
 
+    @Autowired
+    private com.tranki.backend.iam.adapter.out.persistence.UserJpaRepository userJpaRepository;
+
     @Given("que el usuario {string} existe en el sistema")
-    public void que_el_usuario_existe_en_el_sistema(String userId) {
-        // En nuestro stub, los usuarios siempre existen si no es null
+    public void que_el_usuario_existe_en_el_sistema(String userIdStr) {
+        crearUsuario(userIdStr);
     }
 
     @Given("el usuario {string} existe en el sistema")
-    public void el_usuario_existe_en_el_sistema(String userId) {
-        // Idem
+    public void el_usuario_existe_en_el_sistema(String userIdStr) {
+        crearUsuario(userIdStr);
+    }
+
+    private void crearUsuario(String userIdStr) {
+        UUID userId = UUID.nameUUIDFromBytes(userIdStr.getBytes());
+        if (!userJpaRepository.existsById(userId)) {
+            com.tranki.backend.iam.adapter.out.persistence.UserJpaEntity user = new com.tranki.backend.iam.adapter.out.persistence.UserJpaEntity(
+                userId,
+                "DNI" + userId.toString().substring(0, 5),
+                "User " + userIdStr,
+                "999999999",
+                "test@test.com",
+                25,
+                "Address",
+                com.tranki.backend.account.domain.FareCategory.GENERAL,
+                "hash",
+                java.util.List.of(com.tranki.backend.iam.domain.Role.USUARIO_FINAL)
+            );
+            userJpaRepository.save(user);
+        }
     }
 
     @Given("la tarjeta {string} existe con estado {string}, cuenta {string} con saldo {double}, {string} nulo y {string} correspondiente al código {string}")

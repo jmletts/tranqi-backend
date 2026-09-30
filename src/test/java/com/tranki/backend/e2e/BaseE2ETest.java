@@ -11,12 +11,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import org.springframework.context.annotation.Import;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 public abstract class BaseE2ETest {
 
     @Autowired
     protected TestRestTemplate restTemplate;
+
+    @Autowired
+    protected com.tranki.backend.iam.adapter.out.persistence.UserJpaRepository userJpaRepository;
 
     @Autowired
     protected CardJpaRepository cardJpaRepository;
@@ -40,5 +46,6 @@ public abstract class BaseE2ETest {
         tripJpaRepository.deleteAll();
         cardJpaRepository.deleteAll();
         accountJpaRepository.deleteAll();
+        userJpaRepository.deleteAll();
     }
 }
