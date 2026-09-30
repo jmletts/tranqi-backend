@@ -18,16 +18,17 @@ Feature: Gestión de Identidad Única y Roles Aditivos (IAM)
   Scenario: Asignacion de roles adicionales sin duplicar identidad
     Given un usuario ya registrado con DNI "12345678" y rol "USUARIO_FINAL"
     And un administrador autenticado en el sistema
-    When el administrador le otorga el rol de "AGENTE_KIOSKO" al usuario "12345678"
+    When el administrador le otorga el rol de "GESTOR_FLOTA" al usuario "12345678"
     Then el usuario mantiene su misma identidad y DNI
-    And el usuario ahora posee los roles "USUARIO_FINAL" y "AGENTE_KIOSKO" simultaneamente
+    And el usuario ahora posee los roles "USUARIO_FINAL" y "GESTOR_FLOTA" simultaneamente
 
-  Scenario: Inicio de sesión exitoso devuelve JWT
+  Scenario: Un mismo inicio de sesión (Login) devuelve todos los roles del usuario
     Given un usuario registrado con DNI "12345678" y contrasena "secreta123"
-    And que posee los roles "USUARIO_FINAL" y "AGENTE_KIOSKO"
-    When intenta iniciar sesion con credenciales correctas
-    Then el sistema genera y devuelve un token JWT
-    And el token incluye todos sus roles asignados en el payload
+    And que posee los roles "USUARIO_FINAL", "AGENTE_KIOSKO" y "GESTOR_FLOTA"
+    When intenta iniciar sesion en el endpoint unico "/api/v1/auth/login" con sus credenciales
+    Then el sistema verifica la contrasena correctamente
+    And genera y devuelve un token JWT
+    And el token incluye todos sus roles en el payload permitiendole acceso a multiples modulos
 
   Scenario: Acceso denegado a endpoint protegido de Gestor de Flota sin el rol adecuado
     Given un usuario autenticado solo con el rol "USUARIO_FINAL"
