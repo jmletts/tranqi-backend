@@ -59,3 +59,8 @@ Feature: Sincronización idempotente de lote de viajes
     Then el viaje "VIA-1006" es aceptado y debitado de la cuenta "CTA-101"
     And el viaje "VIA-1007" es registrado como error por tarjeta no encontrada
     And el reporte del lote indica 1 viaje exitoso y 1 viaje con error
+
+  Scenario: Rechazo de lote de viajes por firma asimetrica invalida o hardware desconocido
+    Given un validador con hardwareId "ESP32-UNKNOWN" no registrado o con firma invalida
+    When el validador "ESP32-UNKNOWN" envía un lote de viajes al backend
+    Then el sistema rechaza el lote completo con un error 403

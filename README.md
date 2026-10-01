@@ -84,15 +84,17 @@ curl -X POST http://localhost:8080/api/v1/accounts/recharge \
 curl -X POST http://localhost:8080/api/v1/trips/batch \
 -H "Content-Type: application/json" \
 -d '{
-  "busId": "BUS-201",
+  "busId": "ESP32-BUS-01",
   "trips": [
     {
-      "tripId": "VIA-001",
+      "tripId": "VIAJE-001",
       "cardId": "TRK-001",
       "fare": 1.20,
-      "localTimestamp": "2026-09-27T10:00:00"
+      "localTimestamp": "2026-09-30T14:30:00"
     }
-  ]
+  ],
+  "firma": "MEUCIQDx7k9...Base64...",
+  "claveId": "VALIDADOR-ESP32-BUS-01-v1"
 }'
 ```
 

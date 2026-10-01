@@ -19,7 +19,9 @@
    - Se agenda la inclusión de la tarjeta en la Lista Negra para ser difundida a todos los buses de la flota.
 4. **Tolerancia a Fallos Parciales en el Lote:**
    - El lote se procesa elemento por elemento o de forma transaccional tolerante: si un viaje hace referencia a una tarjeta inexistente o corrupta, se marca como anomalía/rechazado en la auditoría sin abortar el resto de viajes válidos del lote.
-5. **Confirmación de Sincronización:**
+5. **Validación Criptográfica Estricta:**
+   - Todo lote debe incluir una firma ECDSA (`firma`) generada por el elemento seguro del validador. El backend rechaza síncronamente el lote completo con HTTP 403 si la firma es inválida o el `busId` (HardwareId) no está registrado.
+6. **Confirmación de Sincronización:**
    - El backend responde al validador con un acuse de recibo (`ACK`) detallando la cantidad de viajes aceptados, duplicados omitidos y errores, permitiendo al validador purgar su memoria local con seguridad.
 
 ---

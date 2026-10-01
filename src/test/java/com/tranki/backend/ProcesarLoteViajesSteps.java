@@ -49,6 +49,9 @@ public class ProcesarLoteViajesSteps {
     private ProcessTripBatchUseCase processTripBatchUseCase;
 
     @Autowired
+    private com.tranki.backend.fleet.domain.repository.BusRepository busRepository;
+
+    @Autowired
     private ApplicationEvents applicationEvents;
 
     private TripBatchResponseDTO lastResponse;
@@ -75,7 +78,14 @@ public class ProcesarLoteViajesSteps {
 
     @Given("el validador físico {string} tiene conexión restablecida con el backend")
     public void el_validador_fisico_tiene_conexion_restablecida_con_el_backend(String busId) {
-        // Step pasivo para contexto
+        if (!busRepository.existsByHardwareId(new com.tranki.backend.fleet.domain.model.HardwareId(busId))) {
+            busRepository.save(new com.tranki.backend.fleet.domain.model.Bus(
+                UUID.randomUUID(),
+                new com.tranki.backend.fleet.domain.model.LicensePlate("PLATE-" + busId),
+                new com.tranki.backend.fleet.domain.model.HardwareId(busId),
+                new com.tranki.backend.fleet.domain.model.PublicKey("PUB-KEY")
+            ));
+        }
     }
 
     @Given("el viaje {string} ya fue registrado previamente para la tarjeta {string}")
@@ -102,7 +112,7 @@ public class ProcesarLoteViajesSteps {
         // Dummy data table just for the already saved trip
         List<TripRequestDTO> reqs = new ArrayList<>();
         reqs.add(new TripRequestDTO(tripId, "TRK-1001", new BigDecimal("1.20"), LocalDateTime.now().minusDays(1)));
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs);
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs, "VALID_SIGNATURE", "VALID_KEY_ID");
         lastResponse = processTripBatchUseCase.execute(batch);
     }
 
@@ -119,7 +129,7 @@ public class ProcesarLoteViajesSteps {
                     LocalDateTime.parse(row.get("localTimestamp"), formatter)
             ));
         }
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs);
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs, "VALID_SIGNATURE", "VALID_KEY_ID");
         lastResponse = processTripBatchUseCase.execute(batch);
     }
 

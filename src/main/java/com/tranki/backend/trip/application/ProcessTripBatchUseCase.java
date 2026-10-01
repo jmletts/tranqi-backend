@@ -1,5 +1,6 @@
 package com.tranki.backend.trip.application;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tranki.backend.account.domain.Account;
 import com.tranki.backend.account.domain.AccountRepository;
 import com.tranki.backend.card.domain.Card;
@@ -12,6 +13,7 @@ import com.tranki.backend.shared.domain.events.TripProcessedSuccessfullyEvent;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchRequestDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchResponseDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripRequestDTO;
+import com.tranki.backend.trip.application.port.out.TripBatchSignatureValidatorPort;
 import com.tranki.backend.trip.domain.Trip;
 import com.tranki.backend.trip.domain.TripRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,16 +30,31 @@ public class ProcessTripBatchUseCase {
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final TripBatchSignatureValidatorPort signatureValidator;
+    private final ObjectMapper objectMapper;
 
-    public ProcessTripBatchUseCase(TripRepository tripRepository, CardRepository cardRepository, AccountRepository accountRepository, ApplicationEventPublisher eventPublisher) {
+    public ProcessTripBatchUseCase(TripRepository tripRepository, CardRepository cardRepository, AccountRepository accountRepository, ApplicationEventPublisher eventPublisher, TripBatchSignatureValidatorPort signatureValidator, ObjectMapper objectMapper) {
         this.tripRepository = tripRepository;
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
         this.eventPublisher = eventPublisher;
+        this.signatureValidator = signatureValidator;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
     public TripBatchResponseDTO execute(TripBatchRequestDTO request) {
+        // Validación criptográfica síncrona
+        try {
+            // El payload a validar sería idealmente el raw JSON. Por simplicidad simularemos
+            // que serializamos la parte de los trips o usamos una representación estándar.
+            String payload = objectMapper.writeValueAsString(request.trips());
+            signatureValidator.validateSignature(request.busId(), payload, request.signature());
+        } catch (Exception e) {
+            // Lanzar excepción para que un GlobalExceptionHandler devuelva 403.
+            throw new SecurityException("Cryptographic validation failed: " + e.getMessage(), e);
+        }
+
         int successful = 0;
         int duplicates = 0;
         int errors = 0;
@@ -85,7 +102,7 @@ public class ProcessTripBatchUseCase {
                     eventPublisher.publishEvent(new TripGeneratedExcessDebtRequiresReviewEvent(tripDto.tripId(), tripDto.cardId()));
                 }
 
-                eventPublisher.publishEvent(new TripProcessedSuccessfullyEvent(tripDto.tripId(), tripDto.cardId()));
+                eventPublisher.publishEvent(new TripProcessedSuccessfullyEvent(tripDto.tripId(), tripDto.cardId(), request.busId(), fare.amount()));
                 successful++;
 
             } catch (Exception e) {

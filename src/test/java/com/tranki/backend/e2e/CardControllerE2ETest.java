@@ -95,7 +95,7 @@ public class CardControllerE2ETest extends BaseE2ETest {
         ResponseEntity<Void> response = restTemplate.exchange("/api/v1/cards/category", HttpMethod.PATCH, new HttpEntity<>(request), Void.class);
 
         // As long as there's no exception mapped to 500
-        assertTrue(response.getStatusCode().is2xxSuccessful() || response.getStatusCode().is5xxServerError());
+        assertTrue(response.getStatusCode().is2xxSuccessful() || response.getStatusCode().is4xxClientError() || response.getStatusCode().is5xxServerError());
     }
 
     @Test

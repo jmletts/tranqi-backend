@@ -5,10 +5,14 @@ import com.tranki.backend.account.domain.AccountStatus;
 import com.tranki.backend.account.domain.FareCategory;
 import com.tranki.backend.card.adapter.out.persistence.CardJpaEntity;
 import com.tranki.backend.card.domain.CardStatus;
+import com.tranki.backend.fleet.adapter.out.persistence.BusJpaEntity;
+import com.tranki.backend.fleet.adapter.out.persistence.BusJpaRepository;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchRequestDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchResponseDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripRequestDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -20,6 +24,16 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TripControllerE2ETest extends BaseE2ETest {
+
+    @Autowired
+    private BusJpaRepository busJpaRepository;
+
+    @BeforeEach
+    public void setupBus() {
+        if (!busJpaRepository.existsByHardwareId("BUS-201")) {
+            busJpaRepository.save(new BusJpaEntity(UUID.randomUUID(), "PLATE-201", "BUS-201", "PUB-KEY"));
+        }
+    }
 
     @Test
     public void shouldProcessValidTripBatchSuccessfully() {
@@ -41,7 +55,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
         TripRequestDTO trip1 = new TripRequestDTO("VIA-100", "TRK-TRIP", new BigDecimal("1.20"), LocalDateTime.now().minusHours(1));
         TripRequestDTO trip2 = new TripRequestDTO("VIA-101", "TRK-TRIP", new BigDecimal("1.20"), LocalDateTime.now());
 
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1, trip2));
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1, trip2), "VALID_SIGNATURE", "KEY-1");
 
         ResponseEntity<TripBatchResponseDTO> response = restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
 
@@ -74,7 +88,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
 
         TripRequestDTO trip1 = new TripRequestDTO("VIA-200", "TRK-TRIP2", new BigDecimal("1.20"), LocalDateTime.now());
 
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1));
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1), "VALID_SIGNATURE", "KEY-1");
 
         // First request
         restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
@@ -92,7 +106,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
     @Test
     public void shouldHandleNonExistentCardInBatch() {
         TripRequestDTO trip1 = new TripRequestDTO("VIA-300", "TRK-NON-EXISTENT", new BigDecimal("1.20"), LocalDateTime.now());
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1));
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1), "VALID_SIGNATURE", "KEY-1");
 
         ResponseEntity<TripBatchResponseDTO> response = restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
 

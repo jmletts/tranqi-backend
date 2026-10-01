@@ -1,0 +1,242 @@
+### ============================================================
+### Tranki Backend — Ejemplos de prueba por endpoint
+### Compatible con: IntelliJ HTTP Client / VS Code REST Client
+### Base URL: http://localhost:8080
+### ============================================================
+
+@baseUrl = http://localhost:8080/api/v1
+
+### ============================================================
+### MÓDULO: TARJETA  (/api/v1/cards)
+### ============================================================
+
+# ── US-01: Emitir tarjeta GENERAL (sin documento) ─────────────
+POST {{baseUrl}}/cards/issue
+Content-Type: application/json
+
+{
+  "cardId": "TRK-0001",
+  "fareCategory": "GENERAL",
+  "documentNumber": null,
+  "kioskAgentId": "a1b2c3d4-0001-0001-0001-000000000001"
+}
+
+###
+
+# ── US-01: Emitir tarjeta SCHOOL (con DNI) ────────────────────
+POST {{baseUrl}}/cards/issue
+Content-Type: application/json
+
+{
+  "cardId": "TRK-0002",
+  "fareCategory": "SCHOOL",
+  "documentNumber": "12345678",
+  "kioskAgentId": "a1b2c3d4-0001-0001-0001-000000000001"
+}
+
+###
+
+# ── US-01: Emitir tarjeta UNIVERSITY (con carnet) ─────────────
+POST {{baseUrl}}/cards/issue
+Content-Type: application/json
+
+{
+  "cardId": "TRK-0003",
+  "fareCategory": "UNIVERSITY",
+  "documentNumber": "U-20230099",
+  "kioskAgentId": "a1b2c3d4-0001-0001-0001-000000000001"
+}
+
+###
+
+# ── US-02: Cambiar categoría tarifaria GENERAL → SCHOOL ───────
+PATCH {{baseUrl}}/cards/category
+Content-Type: application/json
+
+{
+  "accountId": "b1c2d3e4-0001-0001-0001-000000000001",
+  "fareCategory": "SCHOOL",
+  "documentNumber": "87654321",
+  "kioskAgentId": "a1b2c3d4-0001-0001-0001-000000000001"
+}
+
+###
+
+# ── US-03: Vincular tarjeta TRK-0001 a usuario USR-001 ────────
+POST {{baseUrl}}/cards/TRK-0001/link
+Content-Type: application/json
+
+{
+  "cardId": "TRK-0001",
+  "userId": "c1d2e3f4-0001-0001-0001-000000000001",
+  "securityCode": "1234"
+}
+
+###
+
+# ── US-03: Vincular — código de seguridad incorrecto ──────────
+POST {{baseUrl}}/cards/TRK-0002/link
+Content-Type: application/json
+
+{
+  "cardId": "TRK-0002",
+  "userId": "c1d2e3f4-0002-0002-0002-000000000002",
+  "securityCode": "9999"
+}
+
+###
+
+### ============================================================
+### MÓDULO: CUENTA  (/api/v1/accounts)
+### ============================================================
+
+# ── US-06: Recarga desde KIOSK ────────────────────────────────
+POST {{baseUrl}}/accounts/recharge
+Content-Type: application/json
+
+{
+  "transactionId": "TRX-001",
+  "cardId": "TRK-0001",
+  "amount": 20.00,
+  "origin": "KIOSK"
+}
+
+###
+
+# ── US-06: Recarga desde DIGITAL_GATEWAY ──────────────────────
+POST {{baseUrl}}/accounts/recharge
+Content-Type: application/json
+
+{
+  "transactionId": "TRX-002",
+  "cardId": "TRK-0001",
+  "amount": 50.00,
+  "origin": "DIGITAL_GATEWAY"
+}
+
+###
+
+# ── US-06: Idempotencia — TRX-001 enviado dos veces ──────────
+# Debe procesarse solo una vez (sin error ni doble crédito)
+POST {{baseUrl}}/accounts/recharge
+Content-Type: application/json
+
+{
+  "transactionId": "TRX-001",
+  "cardId": "TRK-0001",
+  "amount": 20.00,
+  "origin": "KIOSK"
+}
+
+###
+
+# ── US-07: Transferir fondos entre cuentas ────────────────────
+POST {{baseUrl}}/accounts/users/c1d2e3f4-0001-0001-0001-000000000001/accounts/transfer
+Content-Type: application/json
+
+{
+  "originAccountId": "b1c2d3e4-0001-0001-0001-000000000001",
+  "destinationAccountId": "b1c2d3e4-0002-0002-0002-000000000002",
+  "amount": 10.00
+}
+
+###
+
+# ── US-07: Transferir — monto mayor al saldo disponible ───────
+POST {{baseUrl}}/accounts/users/c1d2e3f4-0001-0001-0001-000000000001/accounts/transfer
+Content-Type: application/json
+
+{
+  "originAccountId": "b1c2d3e4-0001-0001-0001-000000000001",
+  "destinationAccountId": "b1c2d3e4-0002-0002-0002-000000000002",
+  "amount": 9999.00
+}
+
+###
+
+# ── US-08: Consultar movimientos de cuenta ────────────────────
+GET {{baseUrl}}/accounts/users/c1d2e3f4-0001-0001-0001-000000000001/accounts/b1c2d3e4-0001-0001-0001-000000000001/movements
+
+###
+
+### ============================================================
+### MÓDULO: VIAJES  (/api/v1/trips)
+### ============================================================
+
+# ── US-10: Lote normal con 2 viajes válidos ───────────────────
+POST {{baseUrl}}/trips/batch
+Content-Type: application/json
+
+{
+  "busId": "BUS-001",
+  "trips": [
+    {
+      "tripId": "VIA-001",
+      "cardId": "TRK-0001",
+      "fare": 1.20,
+      "localTimestamp": "2026-09-29T08:15:00"
+    },
+    {
+      "tripId": "VIA-002",
+      "cardId": "TRK-0002",
+      "fare": 0.60,
+      "localTimestamp": "2026-09-29T08:22:00"
+    }
+  ]
+}
+
+###
+
+# ── US-10: Lote con viaje duplicado (idempotencia) ────────────
+# VIA-001 ya fue procesado; debe descartarse sin romper el lote
+POST {{baseUrl}}/trips/batch
+Content-Type: application/json
+
+{
+  "busId": "BUS-001",
+  "trips": [
+    {
+      "tripId": "VIA-001",
+      "cardId": "TRK-0001",
+      "fare": 1.20,
+      "localTimestamp": "2026-09-29T08:15:00"
+    },
+    {
+      "tripId": "VIA-003",
+      "cardId": "TRK-0003",
+      "fare": 0.60,
+      "localTimestamp": "2026-09-29T09:05:00"
+    }
+  ]
+}
+
+###
+
+# ── US-10: Lote con tarjeta bloqueada por deuda ───────────────
+POST {{baseUrl}}/trips/batch
+Content-Type: application/json
+
+{
+  "busId": "BUS-002",
+  "trips": [
+    {
+      "tripId": "VIA-004",
+      "cardId": "TRK-BLOCKED",
+      "fare": 1.20,
+      "localTimestamp": "2026-09-29T10:00:00"
+    }
+  ]
+}
+
+###
+
+# ── US-10: Lote vacío ─────────────────────────────────────────
+POST {{baseUrl}}/trips/batch
+Content-Type: application/json
+
+{
+  "busId": "BUS-003",
+  "trips": []
+}
+
+###

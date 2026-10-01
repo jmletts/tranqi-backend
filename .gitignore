@@ -1,0 +1,9 @@
+
+# H2 Database
+data/
+target/
+*.class
+*.jar
+.idea/
+*.iml
+.specs/tranqi/

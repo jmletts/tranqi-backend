@@ -1,4 +1,4 @@
-# US-13: Gestión de Flota y Rutas
+# US-13: Gestión de Flota
 
 ## Descripción
 **Como** Gestor de Flota,  
@@ -8,7 +8,7 @@
 ---
 
 ## Análisis DDD (Domain-Driven Design)
-* **Agregado Raíz (Aggregate Root):** `Bus` y `Route`.
+* **Agregado Raíz (Aggregate Root):** `Bus`.
 * **Entidades:** `FleetEarnings` (Proyección de lectura).
 * **Objetos de Valor (Value Objects):** 
   - `LicensePlate` (Placa única del bus).
@@ -22,5 +22,6 @@
 
 ## Reglas de Negocio
 1. **Registro de Bus:** Solo usuarios con rol `GESTOR_FLOTA` pueden registrar un bus.
-2. **Vinculación de Hardware:** Al registrar el bus, se debe proveer la `PublicKey` del ESP32 instalado.
+2. **Vinculación de Hardware:** Al registrar el bus, se debe proveer la `PublicKey` del ESP32 (Elemento seguro dedicado ATECC608A) instalado.
 3. **Consulta de Ganancias:** El Gestor de Flota puede consultar el total recaudado por cada placa en un periodo determinado (basado en los viajes procesados).
+4. **Validación Criptográfica:** Todo lote de viajes enviado al backend debe venir firmado asimétricamente por el ESP32. El backend verificará la firma usando la `PublicKey` asociada al `HardwareId`. Si el hardware no existe o la firma es inválida, el lote entero se rechaza con un error HTTP 403.
