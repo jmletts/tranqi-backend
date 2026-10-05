@@ -14,6 +14,24 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  # Cache (Spring Cache con ConcurrentMapCacheManager por defecto — productivo: Redis)
+  cache:
+    type: simple
 
 server:
   port: 8080
+
+# ── Configuración MQTT (Broker Mosquitto en Docker) ─────────────────────────
+# En Docker Compose: broker = tcp://mosquitto:1883
+# En desarrollo local: broker = tcp://localhost:1883
+tranki:
+  mqtt:
+    broker: ${MQTT_BROKER:tcp://localhost:1883}
+    client-id: tranki-backend-publisher
+    username: ${MQTT_USER:}
+    password: ${MQTT_PASS:}
+  # Clave privada ECDSA del servidor para firmar distribuciones de Lista Negra (US-14)
+  # Generar con: openssl ecparam -genkey -name prime256v1 -noout -out private.pem
+  #              openssl pkcs8 -topk8 -nocrypt -in private.pem | base64 -w0
+  security:
+    server-private-key: ${TRANKI_SERVER_PRIVATE_KEY:}

@@ -6,4 +6,8 @@ target/
 *.jar
 .idea/
 *.iml
+# Node modules
+node_modules/
+frontend/node_modules/
+
 .specs/tranqi/

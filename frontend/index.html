@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tranqi Transit • Centro de Control & Monitoreo IoT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- =========================================================================
+       TOP NAVBAR
+       ========================================================================= -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">🚌</div>
+      <div class="brand-info">
+        <h1>TRANQI TRANSIT</h1>
+        <p>IOT FLEET TELEMETRY & BLACKLIST SYSTEM • US-01 — US-14</p>
+      </div>
+    </div>
+
+    <div class="connection-badges">
+      <div id="mqtt-badge" class="badge offline" title="Broker Mosquitto MQTT (WebSockets)">
+        <span class="badge-dot"></span>
+        <span>MQTT: ws://9001</span>
+      </div>
+      <div id="backend-badge" class="badge offline" title="Backend Spring Boot REST API">
+        <span class="badge-dot"></span>
+        <span>BACKEND: :8080</span>
+      </div>
+      <div id="validator-badge" class="badge offline" title="Validador Físico / Simulado ESP32">
+        <span class="badge-dot"></span>
+        <span id="validator-status-text">VAL: BUS-201</span>
+      </div>
+      <button id="sound-toggle-btn" class="action-btn secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" title="Activar/Desactivar sonido de validador">
+        🔊 Sonido: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       KPI METRICS BAR
+       ========================================================================= -->
+  <section class="kpi-container">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: rgba(0, 242, 254, 0.12); color: var(--accent-cyan);">📊</div>
+      <div>
+        <div id="kpi-total-trips" class="kpi-val">0</div>
+        <div class="kpi-label">Abordajes Totales</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--accent-emerald);">✅</div>
+      <div>
+        <div id="kpi-authorized" class="kpi-val">0</div>
+        <div class="kpi-label">Autorizados</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: rgba(244, 63, 94, 0.12); color: var(--accent-coral);">⛔</div>
+      <div>
+        <div id="kpi-rejected" class="kpi-val">0</div>
+        <div class="kpi-label">Rechazados</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.12); color: var(--accent-amber);">🛡️</div>
+      <div>
+        <div id="kpi-blacklist-count" class="kpi-val">0</div>
+        <div class="kpi-label">Tarjetas en Lista Negra</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background: rgba(139, 92, 246, 0.12); color: var(--accent-purple);">⚡</div>
+      <div>
+        <div id="kpi-mqtt-count" class="kpi-val">0</div>
+        <div class="kpi-label">Mensajes MQTT</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       MAIN DASHBOARD GRID
+       ========================================================================= -->
+  <main class="dashboard-grid">
+
+    <!-- ─────────────────────────────────────────────────────────────────────
+         COLUMNA IZQUIERDA: VALIDADOR ESP32, OLED Y STREAM DE ABORDAJES
+         ───────────────────────────────────────────────────────────────────── -->
+    <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+
+      <!-- SECCIÓN VALIDADOR EMBEBIDO ESP32 -->
+      <section class="section-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📡</span>
+            <h2>Validador ESP32 (BUS-201)</h2>
+            <span class="tag">OFFLINE-FIRST</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btn-force-batch-sync" class="action-btn secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+              🔄 Forzar Batch Sync (US-10)
+            </button>
+          </div>
+        </div>
+
+        <!-- SIMULADOR VISUAL OLED SSD1306 -->
+        <div class="oled-frame-wrapper">
+          <div class="oled-physical-housing">
+            <div class="oled-pins-header">
+              <span>GND</span>
+              <span>VCC 3.3V</span>
+              <span>SCL (PIN 22)</span>
+              <span>SDA (PIN 21)</span>
+            </div>
+            
+            <div id="oled-screen" class="oled-screen">
+              <div class="oled-top-bar">
+                <span id="oled-top-bus">BUS-201</span>
+                <span id="oled-top-wifi">📶 WiFi: CONECTADO</span>
+              </div>
+              <div class="oled-body">
+                <div id="oled-main-text" class="oled-main-title">TRANQI TRANSIT</div>
+                <div id="oled-sub-text" class="oled-sub-line">ACERQUE SU TARJETA</div>
+                <div id="oled-amount-text" class="oled-amount" style="display: none;"></div>
+              </div>
+              <div class="oled-bottom-bar">
+                <span id="oled-bot-trips">COLA: 0 VIAS</span>
+                <span id="oled-bot-ver">BL v1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TELEMETRÍA HARDWARE ESP32 -->
+        <div class="telemetry-pills">
+          <div class="telem-pill">
+            <div class="title">Unidad Flota</div>
+            <div id="telem-bus-id" class="value">BUS-201</div>
+          </div>
+          <div class="telem-pill">
+            <div class="title">Dirección IP</div>
+            <div id="telem-ip" class="value">192.168.1.100</div>
+          </div>
+          <div class="telem-pill">
+            <div class="title">Señal Wi-Fi (RSSI)</div>
+            <div id="telem-rssi" class="value">-58 dBm (Excelente)</div>
+          </div>
+          <div class="telem-pill">
+            <div class="title">Lote Pendiente</div>
+            <div id="telem-pending-trips" class="value">0 viajes</div>
+          </div>
+          <div class="telem-pill">
+            <div class="title">RAM Libre (Heap)</div>
+            <div id="telem-free-heap" class="value">182,410 bytes</div>
+          </div>
+          <div class="telem-pill">
+            <div class="title">Versión Lista Negra</div>
+            <div id="telem-bl-version" class="value">v1 (Local)</div>
+          </div>
+        </div>
+
+        <!-- CONSOLA DE VALIDACIÓN RÁPIDA (TAP SIMULATOR) -->
+        <div class="simulator-box">
+          <div class="sim-subtitle">Simular Aproximación de Tarjeta al Lector RFID (RC522) • US-09:</div>
+          
+          <div class="quick-tap-grid">
+            <button class="tap-btn" data-card="TRK-001">
+              <span class="card-id">TRK-001</span>
+              <span class="card-desc">General • Saldo S/ 10.00 (Pase directo)</span>
+            </button>
+            <button class="tap-btn" data-card="TRK-9002">
+              <span class="card-id">TRK-9002</span>
+              <span class="card-desc">Saldo S/ 1.00 -> -0.20 (Crédito US-09)</span>
+            </button>
+            <button class="tap-btn" data-card="TRK-9003">
+              <span class="card-id">TRK-9003</span>
+              <span class="card-desc">Saldo -4.50 -> -5.70 (Rechazo Deuda)</span>
+            </button>
+            <button class="tap-btn" data-card="TRK-SCHOOL">
+              <span class="card-id">TRK-SCHOOL</span>
+              <span class="card-desc">Escolar • Tarifa S/ 0.60</span>
+            </button>
+            <button class="tap-btn" data-card="TRK-UNIV">
+              <span class="card-id">TRK-UNIV</span>
+              <span class="card-desc">Universitario • Tarifa S/ 0.60</span>
+            </button>
+            <button class="tap-btn" data-card="TRK-9004">
+              <span class="card-id">TRK-9004</span>
+              <span class="card-desc">Tarjeta Bloqueada en Lista Negra</span>
+            </button>
+          </div>
+
+          <form id="custom-tap-form" class="custom-tap-bar">
+            <input type="text" id="custom-card-input" placeholder="ID personalizado (Ej: TRK-5542)" required>
+            <button type="submit" class="action-btn">
+              ⚡ TAP RFID
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- STREAM DE ABORDAJES EN TIEMPO REAL -->
+      <section class="section-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span>⏱️</span>
+            <h2>Abordajes en Tiempo Real (Live Feed)</h2>
+            <span class="tag">US-08 & US-09</span>
+          </div>
+          <div style="display: flex; gap: 0.4rem;">
+            <select id="event-filter" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+              <option value="ALL">Todos los Eventos</option>
+              <option value="AUTHORIZED">Solo Autorizados</option>
+              <option value="REJECTED">Solo Rechazados</option>
+            </select>
+            <button id="btn-clear-events" class="action-btn secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div id="event-stream" class="event-stream-container">
+          <div style="text-align: center; color: var(--text-muted); padding: 2rem; font-size: 0.85rem;">
+            Esperando abordajes... Acerque una tarjeta o presione uno de los botones TAP.
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────────
+         COLUMNA DERECHA: LISTA NEGRA HÍBRIDA, TARJETAS Y TERMINAL MQTT
+         ───────────────────────────────────────────────────────────────────── -->
+    <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+
+      <!-- GESTIÓN DE LISTA NEGRA HÍBRIDA (US-11) -->
+      <section class="section-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span>🛡️</span>
+            <h2>Lista Negra Híbrida (US-11)</h2>
+            <span class="tag">MQTT URGENTE + HTTP DELTA</span>
+          </div>
+          <button id="btn-poll-backend-sync" class="action-btn secondary" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">
+            📥 Probar Poll Delta Backend
+          </button>
+        </div>
+
+        <!-- CONTROLES DE LISTA NEGRA: BLOQUEO URGENTE Y RECARGA -->
+        <div class="blacklist-controls">
+          
+          <!-- FORMULARIO DE BLOQUEO DE EMERGENCIA MQTT -->
+          <div class="panel-subcard">
+            <h4>🚨 Emitir Bloqueo de Emergencia</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">
+              Publica inmediatamente en el broker MQTT tópico <code style="color: var(--accent-cyan);">/flota/listanegra/urgente</code> con QoS 1.
+            </p>
+            <form id="urgent-block-form" style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <input type="text" id="block-card-id" placeholder="ID de Tarjeta (Ej: TRK-9004)" required>
+              <select id="block-reason" required>
+                <option value="FRAUD">FRAUD (Fraude Crítico / Definitivo)</option>
+                <option value="LOST_STOLEN">LOST_STOLEN (Reporte de Pérdida / Robo)</option>
+                <option value="DEBT">DEBT (Margen de Deuda Excedido)</option>
+              </select>
+              <button type="submit" class="action-btn danger">
+                🔒 Publicar Bloqueo Urgente
+              </button>
+            </form>
+          </div>
+
+          <!-- RECARGA Y LEVANTAMIENTO DE DEUDA (US-06) -->
+          <div class="panel-subcard">
+            <h4>💳 Recarga y Desbloqueo (US-06)</h4>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">
+              Recarga saldo a una tarjeta y cancela bloqueos previos por deuda en RAM y backend.
+            </p>
+            <form id="recharge-form" style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <input type="text" id="recharge-card-id" placeholder="ID de Tarjeta (Ej: TRK-9003)" required>
+              <div style="display: flex; gap: 0.5rem;">
+                <input type="number" id="recharge-amount" placeholder="Monto S/" step="0.50" min="1.00" value="10.00" required>
+                <button type="submit" class="action-btn" style="white-space: nowrap;">
+                  💵 Recargar
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+
+        <!-- TABLA DE TARJETAS BLOQUEADAS -->
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);">
+              Tarjetas Actualmente Bloqueadas:
+            </div>
+            <span id="blacklist-table-count" style="font-size: 0.75rem; font-family: var(--font-mono); color: var(--accent-amber);">
+              Total: 0
+            </span>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarjeta</th>
+                  <th>Motivo</th>
+                  <th>Versión</th>
+                  <th>Fecha/Hora</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="blacklist-table-body">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- VISOR DE INSPECCIÓN JSON DELTA / SNAPSHOT DEL BACKEND -->
+        <div id="sync-inspector" style="background: rgba(10, 14, 24, 0.95); border: 1px solid var(--card-border); border-radius: var(--radius-sm); padding: 0.75rem; display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.72rem; font-family: var(--font-mono); color: var(--accent-cyan);">
+              RESPUESTA BACKEND HTTP GET /api/v1/blacklist/sync
+            </span>
+            <button id="btn-close-inspector" style="background: none; border: none; color: var(--text-muted); cursor: pointer;">✕</button>
+          </div>
+          <pre id="sync-inspector-content" style="font-family: var(--font-mono); font-size: 0.72rem; color: #93c5fd; overflow-x: auto; max-height: 120px;"></pre>
+        </div>
+
+      </section>
+
+      <!-- TARJETAS INTELIGENTES REGISTRADAS -->
+      <section class="section-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span>💳</span>
+            <h2>Tarjetas en Circulación</h2>
+            <span class="tag">US-01 a US-03</span>
+          </div>
+        </div>
+
+        <div id="cards-summary-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.75rem;">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </section>
+
+      <!-- TERMINAL DE MONITORIZACIÓN MQTT EN VIVO -->
+      <section class="section-box">
+        <div class="section-header">
+          <div class="section-title">
+            <span>📟</span>
+            <h2>Terminal MQTT Broker (/flota/#)</h2>
+            <span class="tag">REAL-TIME BUS</span>
+          </div>
+          <div style="display: flex; gap: 0.4rem;">
+            <button id="btn-clear-mqtt-logs" class="action-btn secondary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem;">
+              Limpiar Terminal
+            </button>
+          </div>
+        </div>
+
+        <div class="terminal-window">
+          <div class="terminal-header">
+            <div class="terminal-controls">
+              <span class="term-dot r"></span>
+              <span class="term-dot y"></span>
+              <span class="term-dot g"></span>
+            </div>
+            <span style="font-size: 0.7rem; color: var(--text-muted);">mosquitto:9001 • Subscribed: /flota/#</span>
+          </div>
+          <div id="mqtt-terminal-logs" class="terminal-logs">
+            <div class="log-entry">
+              <span class="log-time">[00:00:00]</span>
+              <span class="log-topic">[SYS]</span>
+              <span class="log-payload">Iniciando conexión con broker MQTT Mosquitto en ws://localhost:9001...</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Script MQTT cliente compilado local -->
+  <script src="js/mqtt.min.js"></script>
+  <!-- Lógica completa de Tranqi Transit Dashboard -->
+  <script src="js/app.js"></script>
+</body>
+</html>
