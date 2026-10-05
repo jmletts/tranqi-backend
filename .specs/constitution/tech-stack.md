@@ -7,7 +7,7 @@ El backend de Tranki se implementa con las siguientes tecnologías base:
 - **Lenguaje:** Java 21 (LTS). Se deben aprovechar características modernas como Records, Pattern Matching para switch/instanceof, y colecciones inmutables.
 - **Framework:** Spring Boot 3.x (Spring Framework 6).
 - **Persistencia:** Spring Data JPA con Hibernate, PostgreSQL para producción / H2 para perfiles de pruebas en memoria.
-- **Mensajería / Eventos:** Broker ligero MQTT / AMQP para sincronización asíncrona con validadores de flota.
+- **Mensajería / Eventos:** Broker ligero MQTT / AMQP para alertas push en tiempo real con la flota. Endpoints de descarga HTTP protegidos mediante **Rate Limiting** (sin autenticación requerida).
 - **Testing:**
   - JUnit 5 (Jupiter)
   - AssertJ para aserciones fluidas

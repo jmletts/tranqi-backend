@@ -43,9 +43,15 @@ Feature: Publicación y distribución de actualizaciones de lista negra
   Scenario: Emisión de evento inmediato ante bloqueo por fraude
     When se ejecuta un bloqueo por fraude sobre la tarjeta "TRK-9004"
     Then el backend incrementa la versión global de la lista negra a 106
-    And se publica de inmediato un evento push prioritario con la adición de "TRK-9004" para toda la flota
+    And se publica de inmediato un evento push prioritario vía MQTT con la adición de "TRK-9004" para toda la flota
     And se emite el evento "EventoInmediatoPublicado"
     And el evento inmediato actúa como mecanismo complementario al delta, no como su único canal de entrega
+
+  Scenario: Solicitud rechazada por exceso de peticiones (429 Too Many Requests)
+    Given que una dirección IP solicita actualización de lista negra más veces de las permitidas por segundo
+    When el backend procesa la solicitud de sincronización
+    Then el backend rechaza la petición con código HTTP 429 Too Many Requests
+    And el servicio permanece estable sin sobrecargar la base de datos
 
   Scenario: Delta incremental que contiene remoción por recarga que saldó deuda
     Given que la tarjeta "TRK-9001" saldó su deuda y fue removida de la lista negra en la versión 106
