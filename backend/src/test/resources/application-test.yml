@@ -8,3 +8,16 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+
+app:
+  cors:
+    allowed-origins: "*"
+
+mqtt:
+  broker:
+    host: localhost
+    port: 1883
+  client:
+    id: tranki-backend-test
+  topics:
+    blacklist-urgent: /flota/listanegra/urgente

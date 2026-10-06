@@ -19,16 +19,16 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
 
     private final ObjectMapper objectMapper;
     
-    @Value("${mqtt.broker.host}")
+    @Value("${mqtt.broker.host:localhost}")
     private String mqttHost;
     
-    @Value("${mqtt.broker.port}")
+    @Value("${mqtt.broker.port:1883}")
     private int mqttPort;
     
-    @Value("${mqtt.client.id}")
+    @Value("${mqtt.client.id:tranki-backend-node}")
     private String clientId;
     
-    @Value("${mqtt.topics.blacklist-urgent}")
+    @Value("${mqtt.topics.blacklist-urgent:/flota/listanegra/urgente}")
     private String urgentTopic;
     
     private MqttPahoMessageHandler mqttHandler;
