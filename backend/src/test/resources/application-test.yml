@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tranki_e2e_test;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+
+app:
+  cors:
+    allowed-origins: "*"
+
+mqtt:
+  broker:
+    host: localhost
+    port: 1883
+  client:
+    id: tranki-backend-test
+  topics:
+    blacklist-urgent: /flota/listanegra/urgente
