@@ -3,6 +3,7 @@ package com.tranki.backend.blacklist.adapter.out.messaging;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.tranki.backend.blacklist.application.port.out.BlacklistEventPublisherPort;
+import com.tranki.backend.blacklist.domain.BlacklistEntry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
@@ -49,6 +50,11 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
     }
 
     @Override
+    public void publishUrgentBlock(BlacklistEntry entry) {
+        String reasonStr = entry.getReason() != null ? entry.getReason().name() : "BLOCKED";
+        publishUrgentBlock(entry.getCardId(), reasonStr, entry.getVersion());
+    }
+
     public void publishUrgentBlock(String cardId, String reason, long newVersion) {
         try {
             ObjectNode json = objectMapper.createObjectNode();
