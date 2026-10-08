@@ -27,7 +27,7 @@ export default function LoginScreen() {
       const session = await authUseCases.executeLogin(dni, password);
       setSession(session);
       Alert.alert('Éxito', 'Sesión iniciada correctamente');
-      // router.replace('/home'); // Navegar a la pantalla principal después
+      router.replace('/home');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Error al iniciar sesión');
     } finally {

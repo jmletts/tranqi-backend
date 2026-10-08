@@ -22,9 +22,10 @@ export class AuthApiService implements AuthRepository {
       name: data.name,
       phone: data.phone,
       email: data.email,
-      age: data.age,
+      age: data.age ? parseInt(data.age.toString(), 10) : 0,
       address: data.address,
-      baseFare: data.baseFare,
+      baseFare: data.baseFare.toUpperCase().includes('UNIVERS') ? 'UNIVERSITY' : 
+                data.baseFare.toUpperCase().includes('ESCOLAR') ? 'SCHOOL' : 'GENERAL',
       password: data.passwordPlainText
     });
   }

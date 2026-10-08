@@ -44,24 +44,18 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
         
         mqttHandler = new MqttPahoMessageHandler(clientId, clientFactory);
         mqttHandler.setDefaultTopic(urgentTopic);
-        // Desactivamos arrancar automáticamente hasta que se envíe un mensaje (lazy init),
-        // o podemos inicializarlo si el broker está disponible.
-        // mqttHandler.start(); // El framework lo inicia
     }
 
     @Override
     public void publishUrgentBlock(BlacklistEntry entry) {
-        String reasonStr = entry.getReason() != null ? entry.getReason().name() : "BLOCKED";
-        publishUrgentBlock(entry.getCardId(), reasonStr, entry.getVersion());
-    }
-
-    public void publishUrgentBlock(String cardId, String reason, long newVersion) {
         try {
             ObjectNode json = objectMapper.createObjectNode();
-            json.put("action", "BLOCK");
-            json.put("cardId", cardId);
-            json.put("reason", reason);
-            json.put("version", newVersion);
+            json.put("action", entry.isActive() ? "BLOCK" : "REMOVE");
+            json.put("cardId", entry.getCardId());
+            if (entry.isActive() && entry.getReason() != null) {
+                json.put("reason", entry.getReason().name());
+            }
+            json.put("version", entry.getVersion());
 
             String payload = objectMapper.writeValueAsString(json);
             
@@ -70,30 +64,9 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
                     .build();
             
             mqttHandler.handleMessage(message);
-            System.out.println("[MQTT] Published BLOCK to " + urgentTopic + ": " + payload);
+            System.out.println("[MQTT] Published event to " + urgentTopic + ": " + payload);
         } catch (Exception e) {
-            System.err.println("[MQTT ERROR] No se pudo publicar el evento de bloqueo: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void publishUrgentUnblock(String cardId, long newVersion) {
-        try {
-            ObjectNode json = objectMapper.createObjectNode();
-            json.put("action", "REMOVE");
-            json.put("cardId", cardId);
-            json.put("version", newVersion);
-
-            String payload = objectMapper.writeValueAsString(json);
-            
-            Message<String> message = MessageBuilder
-                    .withPayload(payload)
-                    .build();
-            
-            mqttHandler.handleMessage(message);
-            System.out.println("[MQTT] Published REMOVE to " + urgentTopic + ": " + payload);
-        } catch (Exception e) {
-            System.err.println("[MQTT ERROR] No se pudo publicar el evento de desbloqueo: " + e.getMessage());
+            System.err.println("[MQTT ERROR] No se pudo publicar el evento en MQTT: " + e.getMessage());
         }
     }
 }

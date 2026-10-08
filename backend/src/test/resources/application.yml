@@ -9,15 +9,15 @@ spring:
     hibernate:
       ddl-auto: create-drop
 
-app:
-  cors:
-    allowed-origins: "*"
-
 mqtt:
   broker:
     host: localhost
     port: 1883
   client:
-    id: tranki-backend-test
+    id: test-client
   topics:
-    blacklist-urgent: /flota/listanegra/urgente
+    blacklist-urgent: /test/urgent
+
+app:
+  cors:
+    allowed-origins: http://localhost:8081
