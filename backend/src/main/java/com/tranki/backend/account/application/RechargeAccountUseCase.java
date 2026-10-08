@@ -29,8 +29,7 @@ public class RechargeAccountUseCase {
     private final RechargeTransactionRepository rechargeTransactionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public RechargeAccountUseCase(CardRepository cardRepository, AccountRepository accountRepository,
-            RechargeTransactionRepository rechargeTransactionRepository, ApplicationEventPublisher eventPublisher) {
+    public RechargeAccountUseCase(CardRepository cardRepository, AccountRepository accountRepository, RechargeTransactionRepository rechargeTransactionRepository, ApplicationEventPublisher eventPublisher) {
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
         this.rechargeTransactionRepository = rechargeTransactionRepository;
@@ -43,8 +42,6 @@ public class RechargeAccountUseCase {
             throw new IllegalArgumentException("El monto a recargar debe ser mayor a cero");
         }
 
-        // NUEVO
-
         if (request.amount().compareTo(new BigDecimal("100.00")) > 0) {
             throw new IllegalArgumentException("El monto excede el limite maximo permitido de S/ 100.00");
         }
@@ -56,8 +53,7 @@ public class RechargeAccountUseCase {
 
         Card card = cardRepository.findById(request.cardId()).orElse(null);
         if (card == null) {
-            eventPublisher
-                    .publishEvent(new RechargeRejectedAccountNotFoundEvent(request.transactionId(), request.cardId()));
+            eventPublisher.publishEvent(new RechargeRejectedAccountNotFoundEvent(request.transactionId(), request.cardId()));
             throw new IllegalArgumentException("Cuenta inexistente");
         }
 
@@ -72,13 +68,13 @@ public class RechargeAccountUseCase {
         }
 
         Account account = accountRepository.findById(card.getAccountId())
-                .orElseThrow(() -> new IllegalStateException("Card is not linked to any account"));
+            .orElseThrow(() -> new IllegalStateException("Card is not linked to any account"));
 
         boolean wasDebtBlocked = (card.getCardStatus() == CardStatus.BLOCKED_DEBT);
-
+        
         Money amountToAdd = Money.of(request.amount().toString());
         account.addBalance(amountToAdd);
-
+        
         if (wasDebtBlocked && account.getBalance().amount().compareTo(BigDecimal.ZERO) > 0) {
             card.unlockFromDebt();
             cardRepository.save(card);
@@ -89,14 +85,14 @@ public class RechargeAccountUseCase {
         accountRepository.save(account);
 
         RechargeTransaction transaction = new RechargeTransaction(
-                request.transactionId(),
-                account.getAccountId(),
-                amountToAdd,
-                request.origin(),
-                LocalDateTime.now());
+            request.transactionId(),
+            account.getAccountId(),
+            amountToAdd,
+            request.origin(),
+            LocalDateTime.now()
+        );
         rechargeTransactionRepository.save(transaction);
 
-        eventPublisher.publishEvent(new RechargeConfirmedEvent(request.transactionId(), account.getAccountId(),
-                card.getCardId(), amountToAdd));
+        eventPublisher.publishEvent(new RechargeConfirmedEvent(request.transactionId(), account.getAccountId(), card.getCardId(), amountToAdd));
     }
 }
