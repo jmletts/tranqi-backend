@@ -4,7 +4,6 @@ import java.util.List;
 
 public record TripBatchRequestDTO(
     String busId,
-    List<TripRequestDTO> trips,
-    String signature,
-    String keyId
+    String validatorKeyId,
+    List<TripRequestDTO> trips
 ) {}

@@ -13,7 +13,6 @@ import com.tranki.backend.shared.domain.events.TripProcessedSuccessfullyEvent;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchRequestDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripBatchResponseDTO;
 import com.tranki.backend.trip.adapter.in.web.dto.TripRequestDTO;
-import com.tranki.backend.trip.application.port.out.TripBatchSignatureValidatorPort;
 import com.tranki.backend.trip.domain.Trip;
 import com.tranki.backend.trip.domain.TripRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,29 +29,16 @@ public class ProcessTripBatchUseCase {
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
     private final ApplicationEventPublisher eventPublisher;
-    private final TripBatchSignatureValidatorPort signatureValidator;
-    private final ObjectMapper objectMapper;
 
-    public ProcessTripBatchUseCase(TripRepository tripRepository, CardRepository cardRepository, AccountRepository accountRepository, ApplicationEventPublisher eventPublisher, TripBatchSignatureValidatorPort signatureValidator, ObjectMapper objectMapper) {
+    public ProcessTripBatchUseCase(TripRepository tripRepository, CardRepository cardRepository, AccountRepository accountRepository, ApplicationEventPublisher eventPublisher) {
         this.tripRepository = tripRepository;
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
         this.eventPublisher = eventPublisher;
-        this.signatureValidator = signatureValidator;
-        this.objectMapper = objectMapper;
     }
 
     @Transactional
     public TripBatchResponseDTO execute(TripBatchRequestDTO request) {
-        // Validación criptográfica síncrona
-        try {
-            // Reconstruir el payload exacto que el ESP32 firmó: "busId|JSON(trips)"
-            String tripsJson = objectMapper.writeValueAsString(request.trips());
-            String payload = request.busId() + "|" + tripsJson;
-            signatureValidator.validateSignature(request.busId(), payload, request.signature());
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new IllegalArgumentException("Error al serializar el payload de viajes para verificación", e);
-        }
 
         int successful = 0;
         int duplicates = 0;
