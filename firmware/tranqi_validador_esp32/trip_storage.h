@@ -111,8 +111,7 @@ public:
         // Construir JSON con ArduinoJson
         DynamicJsonDocument doc(4096);
         doc["busId"] = busId;
-        doc["firma"] = signature;
-        doc["claveId"] = keyId;
+        doc["validatorKeyId"] = keyId;
 
         JsonArray tripsArray = doc.createNestedArray("trips");
         int batchSize = (count > 20) ? 20 : count; // Enviar hasta 20 viajes por lote

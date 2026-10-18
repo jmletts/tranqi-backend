@@ -80,6 +80,31 @@ void publishHeartbeat();
 void handleRemoteCommand(const String& topic, const String& jsonStr);
 
 // ----------------------------------------------------------------------------
+// SEÑALIZACIÓN AUDIBLE (BUZZER)
+// ----------------------------------------------------------------------------
+void beepSuccess() {
+    #if BUZZER_PIN >= 0
+    tone(BUZZER_PIN, 2000, 100);
+    #endif
+}
+
+void beepError() {
+    #if BUZZER_PIN >= 0
+    tone(BUZZER_PIN, 750, 120);
+    delay(140);
+    tone(BUZZER_PIN, 750, 220);
+    #endif
+}
+
+void beepBoot() {
+    #if BUZZER_PIN >= 0
+    tone(BUZZER_PIN, 1200, 80);
+    delay(100);
+    tone(BUZZER_PIN, 1900, 120);
+    #endif
+}
+
+// ----------------------------------------------------------------------------
 // SETUP PRINCIPAL
 // ----------------------------------------------------------------------------
 void setup() {
@@ -96,9 +121,16 @@ void setup() {
     digitalWrite(LED_STATUS_PIN, LOW);
     #endif
 
+    // Pin de Buzzer (Pin 15)
+    #if BUZZER_PIN >= 0
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, LOW);
+    #endif
+
     // Inicializar Pantalla OLED SSD1306 (I2C: SDA 21, SCL 22)
     displayMgr.begin();
     displayMgr.showBootScreen();
+    beepBoot();
     delay(1200);
 
     // Inicializar SPI y Lector RFID MFRC522 (Pines: RST 4, SS 5, SCK 18, MISO 19, MOSI 23)
@@ -235,6 +267,7 @@ void processValidation(const String& cardId) {
                       cardId.c_str(), blockReason.c_str());
         
         displayMgr.showRejected(cardId, "TARJETA BLOQUEADA", 0.00f);
+        beepError();
 
         // Notificar rechazo vía MQTT si conectado
         if (mqttClient.connected()) {
@@ -261,6 +294,7 @@ void processValidation(const String& cardId) {
     CardData* card = cardMgr.getOrCreateCard(cardId);
     if (card == nullptr) {
         displayMgr.showRejected(cardId, "ERROR INTERNO", 0.00f);
+        beepError();
         #if LED_STATUS_PIN >= 0
         digitalWrite(LED_STATUS_PIN, LOW);
         #endif
@@ -279,6 +313,7 @@ void processValidation(const String& cardId) {
                       currentBalance, fare, resultingBalance, MARGEN_DEUDA_MAXIMO);
 
         displayMgr.showRejected(cardId, "SALDO INSUFICIENTE", currentBalance);
+        beepError();
 
         if (mqttClient.connected()) {
             StaticJsonDocument<256> evDoc;
@@ -311,8 +346,9 @@ void processValidation(const String& cardId) {
     // PASO 6: Encolar viaje en almacenamiento local para sincronización posterior (US-08, US-09, US-10)
     tripStorage.recordTrip(cardId, fare, wasDebtTrip, resultingBalance);
 
-    // PASO 7: Feedback en Pantalla OLED SSD1306
+    // PASO 7: Feedback en Pantalla OLED SSD1306 y Buzzer
     displayMgr.showAuthorized(cardId, cardMgr.getCategoryName(card->category), fare, resultingBalance, wasDebtTrip);
+    beepSuccess();
 
     unsigned long elapsed = millis() - startMs;
     Serial.printf("[RENDIMIENTO] Validación completada en %lu ms (Requisito US-09: < 300 ms)\n", elapsed);

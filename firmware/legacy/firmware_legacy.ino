@@ -21,7 +21,7 @@
 // ==========================================
 const char* ssid = "TU_WIFI_SSID";
 const char* password = "TU_WIFI_PASSWORD";
-const char* backendUrl = "http://192.168.1.100:8080/api/v1/trips/batch"; 
+const char* backendUrl = "http://192.168.1.8:8080/api/v1/trips/batch"; 
 
 // ==========================================
 // CONFIGURACIÓN HARDWARE: PINES
@@ -41,6 +41,25 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 // SDA=21, SCL=22 se configuran en Wire.begin()
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// Pin Buzzer (2 patas: Positiva al pin 15, Negativa a GND)
+#define BUZZER_PIN 15
+
+void beepSuccess() {
+  tone(BUZZER_PIN, 2000, 100);
+}
+
+void beepError() {
+  tone(BUZZER_PIN, 750, 120);
+  delay(140);
+  tone(BUZZER_PIN, 750, 220);
+}
+
+void beepBoot() {
+  tone(BUZZER_PIN, 1200, 80);
+  delay(100);
+  tone(BUZZER_PIN, 1900, 120);
+}
 
 // ==========================================
 // CONFIGURACIÓN DEL BUS Y CLAVES
@@ -81,6 +100,10 @@ const unsigned long syncInterval = 10000; // Intenta sincronizar cada 10 seg si 
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  // --- INICIALIZAR BUZZER ---
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
   
   // --- INICIALIZAR PANTALLA OLED ---
   // ESP32 por defecto I2C en SDA=21, SCL=22
@@ -91,6 +114,7 @@ void setup() {
   }
   
   mostrarMensaje("Iniciando\nValidador...");
+  beepBoot();
   
   // --- INICIALIZAR RFID ---
   SPI.begin(18, 19, 23, 5); // sck=18, miso=19, mosi=23, ss=5
@@ -136,6 +160,7 @@ void loop() {
     if(isBlocked) {
       Serial.println("[!] ERROR: Tarjeta en LISTA NEGRA.");
       mostrarMensaje("ERROR:\nTarjeta\nBloqueada!");
+      beepError();
       delay(2000); // Dar tiempo a que el usuario lea
     } else {
       // 3. Registrar viaje válido
@@ -145,6 +170,7 @@ void loop() {
         tripCount++;
         Serial.println("[OK] Viaje registrado.");
         mostrarMensaje("Viaje\nAceptado\n$1.20");
+        beepSuccess();
         delay(2000);
       } else {
         Serial.println("[!] Cola llena.");
@@ -188,7 +214,7 @@ void enviarLoteAlBackend() {
   // Crear JSON
   StaticJsonDocument<1024> doc;
   doc["busId"] = busId;
-  doc["claveId"] = claveId;
+  doc["validatorKeyId"] = claveId;
   
   JsonArray tripsArray = doc.createNestedArray("trips");
   for(int i=0; i<tripCount; i++) {

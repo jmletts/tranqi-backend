@@ -58,7 +58,7 @@ public class FleetSteps {
 
         // 2. Procesamos viajes a través del endpoint batch.
         TripRequestDTO trip = new TripRequestDTO(UUID.randomUUID().toString(), "TRK-001", new BigDecimal(tarifa), LocalDateTime.now());
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(hardwareId, Collections.nCopies(numViajes, trip), "VALID_SIGNATURE", "KEY-ID-1");
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(hardwareId, "KEY-ID-1", Collections.nCopies(numViajes, trip));
         restTemplate.postForEntity("/api/v1/trips/batch", batch, Object.class);
     }
 
@@ -87,7 +87,7 @@ public class FleetSteps {
     @When("el validador {string} envía un lote de viajes al backend")
     public void el_validador_envia_un_lote_de_viajes_al_backend(String hwId) {
         TripRequestDTO trip = new TripRequestDTO(UUID.randomUUID().toString(), "TRK-001", new BigDecimal("1.20"), LocalDateTime.now());
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(hwId, Collections.singletonList(trip), "INVALID_SIGNATURE", "KEY-ID-1");
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(hwId, "KEY-ID-1", Collections.singletonList(trip));
         lastTripBatchResponse = restTemplate.postForEntity("/api/v1/trips/batch", batch, String.class);
     }
 

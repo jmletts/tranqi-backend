@@ -33,9 +33,9 @@
 // IRQ del RC522 queda libre (sin conectar)
 // Alimentación: 3.3V -> 3.3V (NUNCA A 5V) y GND -> GND
 
-// Indicadores opcionales (LEDs / Buzzer)
+// Indicadores (LEDs / Buzzer)
 #define LED_STATUS_PIN        2      // LED integrado de la placa ESP32
-#define BUZZER_PIN            -1     // Buzzer pasivo/activo (-1 si no está conectado)
+#define BUZZER_PIN            15     // Pin 15 -> Pata positiva (+) / Larga del Buzzer (Pata negativa a GND)
 
 // ----------------------------------------------------------------------------
 // 2. CONFIGURACIÓN DE GESTIÓN DE FLOTA (US-13) Y CRIPTOGRAFÍA (US-14)
@@ -72,8 +72,8 @@
 #define WIFI_PASSWORD         "a228640b"
 
 // URL del Backend central Tranki (Spring Boot)
-// Si corre localmente en su PC, reemplace con la IP local de su computadora (ej. 192.168.1.50:8080)
-#define BACKEND_BASE_URL      "http://192.168.1.100:8080"
+// IP real de tu PC en la red local (Ethernet/WiFi)
+#define BACKEND_BASE_URL      "http://192.168.1.8:8080"
 #define BATCH_TRIPS_ENDPOINT  "/api/v1/trips/batch"
 
 // Intervalo de intento de sincronización de viajes en segundos cuando hay Wi-Fi
@@ -100,8 +100,8 @@
 // El ESP32 se suscribe a este tópico para recibir bloqueos críticos en tiempo real
 #define MQTT_TOPIC_BLACKLIST_URGENT "/flota/listanegra/urgente"
 
-// Configuración del Broker MQTT (completar con IP/host real en producción)
-#define MQTT_BROKER_HOST      "192.168.1.100"  // IP del servidor MQTT (mismo que backend o separado)
+// Configuración del Broker MQTT (IP de tu PC en la red local)
+#define MQTT_BROKER_HOST      "192.168.1.8"    // IP del servidor MQTT en Docker
 #define MQTT_BROKER_PORT      1883
 #define MQTT_CLIENT_ID        BUS_ID           // Usar el BUS_ID como client ID único MQTT
 

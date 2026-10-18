@@ -55,7 +55,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
         TripRequestDTO trip1 = new TripRequestDTO("VIA-100", "TRK-TRIP", new BigDecimal("1.20"), LocalDateTime.now().minusHours(1));
         TripRequestDTO trip2 = new TripRequestDTO("VIA-101", "TRK-TRIP", new BigDecimal("1.20"), LocalDateTime.now());
 
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1, trip2), "VALID_SIGNATURE", "KEY-1");
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", "KEY-1", List.of(trip1, trip2));
 
         ResponseEntity<TripBatchResponseDTO> response = restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
 
@@ -88,7 +88,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
 
         TripRequestDTO trip1 = new TripRequestDTO("VIA-200", "TRK-TRIP2", new BigDecimal("1.20"), LocalDateTime.now());
 
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1), "VALID_SIGNATURE", "KEY-1");
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", "KEY-1", List.of(trip1));
 
         // First request
         restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
@@ -106,7 +106,7 @@ public class TripControllerE2ETest extends BaseE2ETest {
     @Test
     public void shouldHandleNonExistentCardInBatch() {
         TripRequestDTO trip1 = new TripRequestDTO("VIA-300", "TRK-NON-EXISTENT", new BigDecimal("1.20"), LocalDateTime.now());
-        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", List.of(trip1), "VALID_SIGNATURE", "KEY-1");
+        TripBatchRequestDTO request = new TripBatchRequestDTO("BUS-201", "KEY-1", List.of(trip1));
 
         ResponseEntity<TripBatchResponseDTO> response = restTemplate.postForEntity("/api/v1/trips/batch", request, TripBatchResponseDTO.class);
 

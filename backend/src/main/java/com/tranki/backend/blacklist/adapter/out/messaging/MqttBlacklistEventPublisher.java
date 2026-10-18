@@ -39,8 +39,12 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
     
     @PostConstruct
     public void init() {
-        MqttPahoClientFactory clientFactory = new DefaultMqttPahoClientFactory();
-        String brokerUrl = "tcp://" + mqttHost + ":" + mqttPort;
+        DefaultMqttPahoClientFactory clientFactory = new DefaultMqttPahoClientFactory();
+        org.eclipse.paho.client.mqttv3.MqttConnectOptions options = new org.eclipse.paho.client.mqttv3.MqttConnectOptions();
+        options.setServerURIs(new String[] { "tcp://" + mqttHost + ":" + mqttPort });
+        options.setAutomaticReconnect(true);
+        options.setCleanSession(true);
+        clientFactory.setConnectionOptions(options);
         
         mqttHandler = new MqttPahoMessageHandler(clientId, clientFactory);
         mqttHandler.setDefaultTopic(urgentTopic);

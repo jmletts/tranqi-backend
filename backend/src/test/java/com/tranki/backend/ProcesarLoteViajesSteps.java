@@ -112,7 +112,7 @@ public class ProcesarLoteViajesSteps {
         // Dummy data table just for the already saved trip
         List<TripRequestDTO> reqs = new ArrayList<>();
         reqs.add(new TripRequestDTO(tripId, "TRK-1001", new BigDecimal("1.20"), LocalDateTime.now().minusDays(1)));
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs, "VALID_SIGNATURE", "VALID_KEY_ID");
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, "VALID_KEY_ID", reqs);
         lastResponse = processTripBatchUseCase.execute(batch);
     }
 
@@ -129,7 +129,7 @@ public class ProcesarLoteViajesSteps {
                     LocalDateTime.parse(row.get("localTimestamp"), formatter)
             ));
         }
-        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, reqs, "VALID_SIGNATURE", "VALID_KEY_ID");
+        TripBatchRequestDTO batch = new TripBatchRequestDTO(busId, "VALID_KEY_ID", reqs);
         lastResponse = processTripBatchUseCase.execute(batch);
     }
 

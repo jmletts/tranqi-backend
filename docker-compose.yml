@@ -17,6 +17,15 @@ services:
       timeout: 5s
       retries: 5
 
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: tranki-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
   backend:
     build:
       context: ./backend
@@ -26,6 +35,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mqtt:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
@@ -35,6 +46,8 @@ services:
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SERVER_PORT: 8080
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
 
   frontend:
     build:

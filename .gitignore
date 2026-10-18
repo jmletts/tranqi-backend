@@ -7,3 +7,5 @@ target/
 .idea/
 *.iml
 .specs/tranqi/
+.pio/
+firmware/.pio/

@@ -5,7 +5,7 @@ WORKDIR /app
 # Copiar configuración de Maven y cachear dependencias
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 # Compilar el artefacto sin ejecutar pruebas (los tests ya se validan en CI)
 COPY src src
