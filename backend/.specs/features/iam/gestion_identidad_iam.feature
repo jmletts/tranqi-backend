@@ -1,5 +1,6 @@
 Feature: Gestión de Identidad Única y Roles Aditivos (IAM)
 
+  @TC-071 @US-12
   Scenario: Registro exitoso de un pasajero (Auto-registro con campos obligatorios)
     Given que un visitante provee sus datos personales:
       | DNI       | 12345678          |
@@ -15,6 +16,7 @@ Feature: Gestión de Identidad Única y Roles Aditivos (IAM)
     And la contrasena se guarda protegida con el algoritmo Bcrypt
     And se le asigna unicamente el rol base "USUARIO_FINAL"
 
+  @TC-072 @US-12
   Scenario: Asignacion de roles adicionales sin duplicar identidad
     Given un usuario ya registrado con DNI "12345678" y rol "USUARIO_FINAL"
     And un administrador autenticado en el sistema
@@ -22,6 +24,7 @@ Feature: Gestión de Identidad Única y Roles Aditivos (IAM)
     Then el usuario mantiene su misma identidad y DNI
     And el usuario ahora posee los roles "USUARIO_FINAL" y "GESTOR_FLOTA" simultaneamente
 
+  @TC-073 @US-12
   Scenario: Un mismo inicio de sesión (Login) devuelve todos los roles del usuario
     Given un usuario registrado con DNI "12345678" y contrasena "secreta123"
     And que posee los roles "USUARIO_FINAL", "AGENTE_KIOSKO" y "GESTOR_FLOTA"
@@ -30,6 +33,7 @@ Feature: Gestión de Identidad Única y Roles Aditivos (IAM)
     And genera y devuelve un token JWT
     And el token incluye todos sus roles en el payload permitiendole acceso a multiples modulos
 
+  @TC-074 @US-12
   Scenario: Acceso denegado a endpoint protegido de Gestor de Flota sin el rol adecuado
     Given un usuario autenticado solo con el rol "USUARIO_FINAL"
     When intenta acceder al endpoint protegido para consultar ganancias de buses

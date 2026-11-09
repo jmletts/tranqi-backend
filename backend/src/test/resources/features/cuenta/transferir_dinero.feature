@@ -19,18 +19,21 @@ Feature: Transferencia de saldo entre cuentas del mismo usuario
     And la tarjeta "TRK-7007" existe con estado "ACTIVE", asociada a la cuenta "CTA-707" con saldo 8.00 y "userId" nulo
     And el "debtMarginLimit" de todas las cuentas de "USR-301" es de -3.00
 
+  @TC-038 @US-07
   Scenario: Transferencia exitosa entre dos cuentas del mismo usuario
     When el usuario "USR-301" transfiere 15.00 desde la cuenta "CTA-701" hacia la cuenta "CTA-702"
     Then el saldo de la cuenta "CTA-701" pasa a ser 35.00
     And el saldo de la cuenta "CTA-702" pasa a ser 25.00
     And se emite el evento "TransferenciaConfirmada"
 
+  @TC-039 @US-07
   Scenario: El monto de la transferencia debe ser mayor a cero
     When el usuario "USR-301" intenta transferir 0.00 desde la cuenta "CTA-701" hacia la cuenta "CTA-702"
     Then la transferencia es rechazada porque el monto debe ser mayor a cero
     And el saldo de la cuenta "CTA-701" se mantiene en 50.00
     And el saldo de la cuenta "CTA-702" se mantiene en 10.00
 
+  @TC-040 @US-07
   Scenario: Rechazo de transferencia si la cuenta origen queda por debajo del límite de margen de deuda
     When el usuario "USR-301" intenta transferir 54.00 desde la cuenta "CTA-701" hacia la cuenta "CTA-702"
     Then la transferencia es rechazada porque la cuenta origen quedaría por debajo del "debtMarginLimit" de -3.00
@@ -38,21 +41,25 @@ Feature: Transferencia de saldo entre cuentas del mismo usuario
     And el saldo de la cuenta "CTA-702" se mantiene en 10.00
     And se emite el evento "TransferenciaRechazadaPorLimiteDeuda"
 
+  @TC-041 @US-07
   Scenario: Rechazo de transferencia hacia una cuenta cuyo "userId" no pertenece al usuario ejecutor
     When el usuario "USR-301" intenta transferir 10.00 desde la cuenta "CTA-701" hacia la cuenta "CTA-704"
     Then la transferencia es rechazada porque la cuenta destino no está autorizada para este usuario
     And se emite el evento "TransferenciaRechazadaPorCuentaNoAutorizada"
 
+  @TC-042 @US-07
   Scenario: Rechazo de transferencia desde una cuenta cuyo "userId" no pertenece al usuario ejecutor
     When el usuario "USR-301" intenta transferir 10.00 desde la cuenta "CTA-704" hacia la cuenta "CTA-701"
     Then la transferencia es rechazada porque la cuenta origen no está autorizada para este usuario
     And se emite el evento "TransferenciaRechazadaPorCuentaNoAutorizada"
 
+  @TC-043 @US-07
   Scenario: Rechazo de transferencia cuando la tarjeta de la cuenta origen está en estado LOST_REPORTED
     When el usuario "USR-301" intenta transferir 10.00 desde la cuenta "CTA-705" hacia la cuenta "CTA-701"
     Then la transferencia es rechazada porque la tarjeta asociada a la cuenta origen está en estado "LOST_REPORTED"
     And se emite el evento "TransferenciaRechazadaPorCuentaNoAutorizada"
 
+  @TC-044 @US-07
   Scenario: Rechazo de transferencia cuando la tarjeta de la cuenta destino está en estado BLOQUEADA_FRAUDE
     When el usuario "USR-301" intenta transferir 10.00 desde la cuenta "CTA-701" hacia la cuenta "CTA-706"
     Then la transferencia es rechazada porque la tarjeta asociada a la cuenta destino está en estado "BLOQUEADA_FRAUDE"

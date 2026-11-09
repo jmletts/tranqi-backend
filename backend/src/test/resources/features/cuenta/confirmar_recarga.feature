@@ -15,6 +15,7 @@ Feature: Confirmación de recarga de saldo en cuenta
     And la tarjeta "TRK-6004" existe con estado "BLOQUEADA_FRAUDE", asociada a la cuenta "CTA-604" con saldo 0.00
     And la tarjeta "TRK-6005" existe con estado "LOST_REPORTED", asociada a la cuenta "CTA-605" con saldo 0.00
 
+  @TC-031 @US-06
   Scenario: Recarga exitosa desde kiosco físico para tarjeta activa
     When se procesa una recarga con identificador "TRX-601" por un monto de 15.00 en la tarjeta "TRK-6001" con origen "KIOSCO"
     Then la recarga es acreditada exitosamente
@@ -22,6 +23,7 @@ Feature: Confirmación de recarga de saldo en cuenta
     And la tarjeta "TRK-6001" permanece en estado "ACTIVE"
     And se emite el evento "RecargaConfirmada"
 
+  @TC-032 @US-06
   Scenario: Recarga exitosa que levanta automáticamente el bloqueo por deuda
     When se procesa una recarga con identificador "TRX-602" por un monto de 10.00 en la tarjeta "TRK-6002" con origen "KIOSCO"
     Then la recarga es acreditada exitosamente
@@ -30,6 +32,7 @@ Feature: Confirmación de recarga de saldo en cuenta
     And se genera una orden de remoción de lista negra para la tarjeta "TRK-6002"
     And se emite el evento "CuentaDesbloqueadaPorRecarga"
 
+  @TC-033 @US-06
   Scenario: Recarga insuficiente que no cubre la deuda total mantiene el bloqueo
     When se procesa una recarga con identificador "TRX-603" por un monto de 5.00 en la tarjeta "TRK-6003" con origen "PASARELA_NOTIFICACION"
     Then la recarga es acreditada exitosamente
@@ -37,26 +40,31 @@ Feature: Confirmación de recarga de saldo en cuenta
     And la tarjeta "TRK-6003" permanece en estado "BLOCKED_DEUDA"
     And se emite el evento "RecargaConfirmada"
 
+  @TC-034 @US-06
   Scenario: Procesamiento idempotente ante reenvío de la misma recarga
     Given que la recarga "TRX-601" ya fue procesada anteriormente con un saldo acreditado de 15.00 en la cuenta "CTA-601"
     When se vuelve a recibir la recarga con identificador "TRX-601" por un monto de 15.00 en la tarjeta "TRK-6001"
     Then el sistema responde confirmando la transacción previa
     And el saldo de la cuenta "CTA-601" no se incrementa por segunda vez
 
+  @TC-035 @US-06
   Scenario: Rechazo de recarga en tarjeta con bloqueo por fraude
     When se procesa una recarga con identificador "TRX-604" por un monto de 20.00 en la tarjeta "TRK-6004" con origen "KIOSCO"
     Then la solicitud de recarga es rechazada por tarjeta bloqueada por fraude
     And el saldo de la cuenta "CTA-604" permanece en 0.00
 
+  @TC-036 @US-06
   Scenario: Rechazo de recarga en tarjeta reportada como perdida
     When se procesa una recarga con identificador "TRX-605" por un monto de 10.00 en la tarjeta "TRK-6005" con origen "KIOSCO"
     Then la solicitud de recarga es rechazada por tarjeta reportada como perdida
 
+  @TC-037 @US-06
   Scenario: Rechazo de recarga en cuenta inexistente
     When se procesa una recarga con identificador "TRX-699" por un monto de 10.00 en la tarjeta "TRK-9999" con origen "KIOSCO"
     Then la solicitud de recarga es rechazada por cuenta inexistente
     And se emite el evento "RecargaRechazadaPorCuentaInexistente"
 
+  @TC-080 @US-06
   Scenario: Rechazo de recarga que supera el monto máximo permitido
     When se procesa una recarga con identificador "TRX-690" por un monto de 150.00 en la tarjeta "TRK-6001" con origen "KIOSCO"
     Then la solicitud de recarga es rechazada por exceder el monto maximo permitido

@@ -12,12 +12,14 @@ Feature: Reporte de tarjeta perdida y emisión de tarjeta de reemplazo
     And la tarjeta "TRK-4003" existe con estado "ACTIVE", asociada a la cuenta "CTA-403" con saldo 15.00 y "userId" nulo
     And la tarjeta "TRK-4004" existe con estado "LOST_REPORTED" y "userId" igual a "USR-201"
 
+  @TC-023 @US-04
   Scenario: Reporte exitoso de tarjeta perdida y emisión de tarjeta de reemplazo
     When el usuario "USR-201" reporta como perdida la tarjeta "TRK-4001" solicitando el reemplazo con la tarjeta de inventario "TRK-4002"
     Then la tarjeta "TRK-4001" pasa al estado "LOST_REPORTED"
     And la tarjeta "TRK-4001" es añadida a la lista negra con motivo "PERDIDA_ROBO"
     And se emite el evento "TarjetaReportadaComoPerdida"
 
+  @TC-024 @US-04
   Scenario: La tarjeta de reemplazo apunta al mismo "accountId" sin copiar datos de la Cuenta
     Given que el usuario "USR-201" acaba de reportar como perdida la tarjeta "TRK-4001" con reemplazo "TRK-4002"
     When se verifica la tarjeta de reemplazo "TRK-4002"
@@ -28,11 +30,13 @@ Feature: Reporte de tarjeta perdida y emisión de tarjeta de reemplazo
     And la cuenta "CTA-401" conserva su "userId" igual a "USR-201" sin ninguna copia manual
     And se emite el evento "TarjetaDeReemplazoApuntaAMismaCuenta"
 
+  @TC-025 @US-04
   Scenario: Rechazo de reporte de pérdida para una tarjeta anónima
     When se solicita reportar la pérdida de la tarjeta anónima "TRK-4003"
     Then la solicitud es rechazada porque las tarjetas anónimas no admiten reporte digital de pérdida por falta de titularidad acreditable
     And la tarjeta "TRK-4003" permanece en estado "ACTIVE"
 
+  @TC-026 @US-04
   Scenario: Rechazo al intentar reportar una tarjeta que ya se encuentra en estado LOST_REPORTED
     When el usuario "USR-201" intenta reportar como perdida la tarjeta "TRK-4004"
     Then la solicitud es rechazada porque la tarjeta ya se encuentra en estado terminal de pérdida

@@ -16,16 +16,19 @@ Feature: Consulta del historial de movimientos de una cuenta
       | VIAJE   | VIA-801       | -1.20  | 2026-09-10 09:15:00 | BUS-101 |
       | VIAJE   | VIA-802       | -1.20  | 2026-09-10 18:30:00 | BUS-102 |
 
+  @TC-045 @US-08
   Scenario: Consulta exitosa del historial de movimientos de una cuenta propia
     When el usuario "USR-401" consulta los movimientos de la cuenta "CTA-801"
     Then el sistema retorna un listado con 3 movimientos
     And el primer movimiento del listado corresponde al viaje "VIA-802" por ser el más reciente
     And la respuesta incluye el saldo actual de la cuenta "CTA-801"
 
+  @TC-046 @US-08
   Scenario: Rechazo al consultar movimientos de una cuenta perteneciente a otro usuario
     When el usuario "USR-401" intenta consultar los movimientos de la cuenta "CTA-802"
     Then el sistema rechaza la consulta porque el "userId" de la cuenta no coincide con el del usuario solicitante
 
+  @TC-047 @US-08
   Scenario: Rechazo al consultar movimientos de una cuenta anónima no vinculada al usuario
     When el usuario "USR-401" intenta consultar los movimientos de la cuenta anónima "CTA-803"
     Then el sistema rechaza la consulta porque la cuenta es anónima y no está vinculada a ningún usuario

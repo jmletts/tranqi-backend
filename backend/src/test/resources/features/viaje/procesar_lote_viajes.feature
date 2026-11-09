@@ -9,6 +9,7 @@ Feature: Sincronización idempotente de lote de viajes
     And la tarjeta "TRK-1002" existe con cuenta "CTA-102" y saldo de 0.50 en estado "ACTIVE"
     And el validador físico "BUS-201" tiene conexión restablecida con el backend
 
+  @TC-054 @US-10
   Scenario: Procesamiento exitoso de un lote con múltiples viajes válidos
     When el validador "BUS-201" envía un lote con los siguientes viajes:
       | tripId   | cardId   | fare | localTimestamp      |
@@ -18,6 +19,7 @@ Feature: Sincronización idempotente de lote de viajes
     And el saldo final de la cuenta "CTA-101" es de 0.60
     And se emite el evento "ViajeProcesadoConExito" por cada viaje aceptado
 
+  @TC-055 @US-10
   Scenario: Detección idempotente de viajes previamente sincronizados
     Given el viaje "VIA-1001" ya fue registrado previamente para la tarjeta "TRK-1001"
     When el validador "BUS-201" reenvía el lote conteniendo el viaje "VIA-1001"
@@ -25,6 +27,7 @@ Feature: Sincronización idempotente de lote de viajes
     And el saldo de la cuenta "CTA-101" no es debitado nuevamente
     And se emite el evento "ViajeDescartadoPorDuplicado"
 
+  @TC-056 @US-10
   Scenario: Viaje conciliado que lleva la cuenta a saldo negativo pasa la tarjeta a bloqueo por deuda
     When el validador "BUS-201" envía un lote con el viaje:
       | tripId   | cardId   | fare | localTimestamp      |
@@ -34,6 +37,7 @@ Feature: Sincronización idempotente de lote de viajes
     And la tarjeta "TRK-1002" pasa al estado "BLOCKED_DEBT"
     And la tarjeta "TRK-1002" es programada para ingresar a la lista negra
 
+  @TC-057 @US-10
   Scenario: El exceso de deuda no revierte el viaje — se marca para revisión
     Given la tarjeta "TRK-1002" tiene un saldo de -2.80 y "debtMarginLimit" de -3.00
     When el validador "BUS-201" envía un lote con el viaje:
@@ -44,6 +48,7 @@ Feature: Sincronización idempotente de lote de viajes
     And el viaje "VIA-1004" queda con "processingStatus" igual a "PROCESADO" pero marcado para revisión de exceso de deuda
     And se emite el evento "ViajeGeneroExcesoDeDeudaRequiereRevision"
 
+  @TC-058 @US-10
   Scenario: Rechazo de viaje con "localTimestamp" en el futuro
     When el validador "BUS-201" envía un lote con el viaje:
       | tripId   | cardId   | fare | localTimestamp      |
@@ -51,6 +56,7 @@ Feature: Sincronización idempotente de lote de viajes
     Then el viaje "VIA-1005" es rechazado porque su "localTimestamp" es una fecha futura
     And el saldo final de la cuenta "CTA-101" es de 3.00
 
+  @TC-059 @US-10
   Scenario: Tolerancia a viajes con tarjetas inexistentes dentro del lote
     When el validador "BUS-201" envía un lote con los siguientes viajes:
       | tripId   | cardId   | fare | localTimestamp      |

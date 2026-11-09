@@ -1,10 +1,12 @@
 Feature: Gestión de Flota Operativa
 
+  @TC-075 @US-13
   Scenario: Registro de un nuevo bus por un Gestor de Flota
     Given un usuario autenticado con el rol "GESTOR_FLOTA"
     When registra un bus con placa "ABC-123", hardwareId "MAC-01" y una clave publica
     Then el bus es registrado exitosamente en el sistema
 
+  @TC-076 @US-13
   Scenario: Consulta de ganancias por bus
     Given un bus con placa "ABC-123" que ha procesado 3 viajes de "1.20"
     And un usuario autenticado con rol "GESTOR_FLOTA"
