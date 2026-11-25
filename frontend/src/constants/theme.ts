@@ -33,7 +33,7 @@ export const Theme = {
     bottomTab: 40,
     cardSmall: 12,
     cardMedium: 16,
-    cardLarge: 24,
+    cardLarge: 28, // Aumentado ligeramente para mayor suavidad
     asymmetricContainer: 40 // For borderTopLeftRadius
   },
   spacing: {

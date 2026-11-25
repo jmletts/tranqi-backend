@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "cypress": "^16.3.0",
     "react-native-svg-transformer": "^1.5.3",
     "typescript": "~6.0.3"
   },
@@ -43,7 +44,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "private": true
 }

@@ -5,8 +5,10 @@ import com.tranki.backend.account.domain.AccountRepository;
 import com.tranki.backend.shared.domain.Money;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class AccountPersistenceAdapter implements AccountRepository {
@@ -32,13 +34,24 @@ public class AccountPersistenceAdapter implements AccountRepository {
 
     @Override
     public Optional<Account> findById(UUID accountId) {
-        return repository.findById(accountId).map(entity -> new Account(
+        return repository.findById(accountId).map(this::toDomain);
+    }
+
+    @Override
+    public List<Account> findByUserId(UUID userId) {
+        return repository.findByUserId(userId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    private Account toDomain(AccountJpaEntity entity) {
+        return new Account(
             entity.getAccountId(),
             new Money(entity.getBalance()),
             new Money(entity.getDebtMarginLimit()),
             entity.getStatus(),
             entity.getUserId(),
             entity.getFareCategory()
-        ));
+        );
     }
 }

@@ -10,12 +10,17 @@ public class Card {
     private String securityCodeHash;
     private UUID kioskAgentId;
     private int failedLinkAttempts;
+    private String alias;
 
     public Card(String cardId, UUID accountId, CardStatus cardStatus, String verificationNumber, String securityCodeHash, UUID kioskAgentId) {
-        this(cardId, accountId, cardStatus, verificationNumber, securityCodeHash, kioskAgentId, 0);
+        this(cardId, accountId, cardStatus, verificationNumber, securityCodeHash, kioskAgentId, 0, null);
     }
 
     public Card(String cardId, UUID accountId, CardStatus cardStatus, String verificationNumber, String securityCodeHash, UUID kioskAgentId, int failedLinkAttempts) {
+        this(cardId, accountId, cardStatus, verificationNumber, securityCodeHash, kioskAgentId, failedLinkAttempts, null);
+    }
+
+    public Card(String cardId, UUID accountId, CardStatus cardStatus, String verificationNumber, String securityCodeHash, UUID kioskAgentId, int failedLinkAttempts, String alias) {
         this.cardId = cardId;
         this.accountId = accountId;
         this.cardStatus = cardStatus;
@@ -23,6 +28,7 @@ public class Card {
         this.securityCodeHash = securityCodeHash;
         this.kioskAgentId = kioskAgentId;
         this.failedLinkAttempts = failedLinkAttempts;
+        this.alias = alias;
     }
 
     public static Card createInventoryCard(String cardId) {
@@ -53,6 +59,23 @@ public class Card {
         this.cardStatus = CardStatus.BLOCKED_DEBT;
     }
 
+    public void reportLost() {
+        if (this.cardStatus == CardStatus.LOST_REPORTED) {
+            throw new CardBlockedException("La tarjeta ya fue reportada como perdida.");
+        }
+        if (this.cardStatus == CardStatus.FRAUD_BLOCKED) {
+            throw new CardBlockedException("La tarjeta ya se encuentra bloqueada por fraude.");
+        }
+        if (this.cardStatus == CardStatus.IN_INVENTORY) {
+            throw new IllegalStateException("No se puede reportar perdida una tarjeta en inventario.");
+        }
+        this.cardStatus = CardStatus.LOST_REPORTED;
+    }
+
+    public void rename(String alias) {
+        this.alias = (alias != null && !alias.isBlank()) ? alias.trim() : null;
+    }
+
     public void issue(UUID accountId, UUID kioskAgentId, String verificationNumber, String securityCodeHash) {
         if (this.cardStatus != CardStatus.IN_INVENTORY) {
             throw new IllegalStateException("Card is not IN_INVENTORY");
@@ -71,4 +94,5 @@ public class Card {
     public String getSecurityCodeHash() { return securityCodeHash; }
     public UUID getKioskAgentId() { return kioskAgentId; }
     public int getFailedLinkAttempts() { return failedLinkAttempts; }
+    public String getAlias() { return alias; }
 }

@@ -22,8 +22,8 @@ export const BalanceContainer = ({
 }: BalanceContainerProps) => {
   return (
     <View style={styles.container}>
-      {/* Spacer to push content down because of overlapping card */}
-      <View style={{ height: 60 }} /> 
+      {/* Spacer to push content down leaving blue shadow area for overlapping card */}
+      <View style={{ height: 68 }} /> 
       
       <View style={styles.headerRow}>
         <Text style={styles.label}>Saldo de Tarjeta:</Text>
@@ -57,7 +57,7 @@ export const BalanceContainer = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Theme.colors.primary.blue,
-    borderRadius: 24,
+    borderRadius: Theme.borderRadius.cardLarge, // Aumentado ligeramente a 28
     padding: Theme.spacing.l,
     paddingTop: Theme.spacing.m,
     zIndex: 1,

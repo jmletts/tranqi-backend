@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Text, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MainLayout } from '@presentation/components/MainLayout';
 import { TextInputPill } from '@presentation/components/TextInputPill';
@@ -8,75 +8,96 @@ import { Theme } from '@/constants/theme';
 import { AuthApiService } from '@infrastructure/api/AuthApiService';
 import { AuthUseCases } from '@domain/useCases/AuthUseCases';
 import { useAuthStore } from '@presentation/state/useAuthStore';
+import { useTravelerStore } from '@presentation/state/useTravelerStore';
 
-// Initialize Use Case
+import { LogoTranqiCuad } from '@presentation/components/icons';
+
 const authApi = new AuthApiService();
 const authUseCases = new AuthUseCases(authApi);
 
 export default function LoginScreen() {
   const router = useRouter();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isCheckingSession = useAuthStore((state) => state.isCheckingSession);
   const setSession = useAuthStore((state) => state.setSession);
-  
+  const refreshAll = useTravelerStore((state) => state.refreshAll);
+
   const [dni, setDni] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (isAuthenticated && !isCheckingSession) {
+      router.replace('/(tabs)/home');
+    }
+  }, [isAuthenticated, isCheckingSession, router]);
+
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const session = await authUseCases.executeLogin(dni, password);
-      setSession(session);
-      Alert.alert('Éxito', 'Sesión iniciada correctamente');
-      router.replace('/home');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error al iniciar sesión');
+      const session = await authUseCases.executeLogin(dni.trim(), password);
+      await setSession(session);
+      refreshAll().catch(() => {});
+      router.replace('/(tabs)/home');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Error al iniciar sesión';
+      Alert.alert('Error', msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const LogoPlaceholder = () => (
-    <View style={styles.logoPlaceholder}>
-      <Text style={styles.logoText}>LOGO</Text>
-    </View>
-  );
+  if (isCheckingSession) {
+    return (
+      <MainLayout headerContent={<LogoTranqiCuad width={120} height={70} />}>
+        <View style={styles.checkingContainer}>
+          <ActivityIndicator size="large" color={Theme.colors.primary.blue} />
+          <Text style={styles.checkingText}>Verificando sesión...</Text>
+        </View>
+      </MainLayout>
+    );
+  }
 
   return (
-    <MainLayout headerContent={<LogoPlaceholder />}>
+    <MainLayout headerContent={<LogoTranqiCuad width={120} height={70} />}>
       <View style={styles.headerDecorations}>
         <View style={[styles.decorationBand, { backgroundColor: Theme.colors.primary.pink }]} />
         <View style={[styles.decorationBand, { backgroundColor: Theme.colors.primary.blue }]} />
       </View>
-      
+
       <View style={styles.content}>
         <Text style={styles.title}>Te damos la Bienvenida</Text>
-        
-        <TextInputPill 
-          placeholder="DNI" 
+
+        <TextInputPill
+          testID="login-dni-input"
+          placeholder="DNI"
           keyboardType="numeric"
           value={dni}
           onChangeText={setDni}
           maxLength={8}
         />
-        
-        <TextInputPill 
-          placeholder="Contraseña" 
+
+        <TextInputPill
+          testID="login-password-input"
+          placeholder="Contraseña"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
 
         <View style={styles.buttonContainer}>
-          <PillButton 
-            title="Iniciar Sesión" 
-            onPress={handleLogin} 
+          <PillButton
+            testID="login-submit-button"
+            title="Iniciar Sesión"
+            onPress={handleLogin}
             loading={loading}
           />
-          
-          <PillButton 
-            title="Regístrate" 
+
+          <PillButton
+            testID="login-register-button"
+            title="Regístrate"
             variant="outline"
-            onPress={() => router.push('/register')} 
+            onPress={() => router.push('/register')}
           />
         </View>
       </View>
@@ -85,19 +106,6 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  logoPlaceholder: {
-    width: 60,
-    height: 60,
-    backgroundColor: Theme.colors.primary.yellow,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  logoText: {
-    fontFamily: Theme.typography.family.black,
-    color: Theme.colors.background.dark,
-    fontSize: 12,
-  },
   headerDecorations: {
     position: 'absolute',
     top: 0,
@@ -116,6 +124,17 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.xl,
     paddingTop: Theme.spacing.xl,
   },
+  checkingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  checkingText: {
+    fontFamily: Theme.typography.family.bold,
+    fontSize: 14,
+    color: Theme.colors.ui.textSecondary,
+  },
   title: {
     fontFamily: Theme.typography.family.black,
     fontSize: 28,
@@ -126,5 +145,5 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: Theme.spacing.l,
     gap: Theme.spacing.m,
-  }
+  },
 });

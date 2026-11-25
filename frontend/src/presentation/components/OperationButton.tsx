@@ -6,12 +6,18 @@ interface OperationButtonProps {
   title: string;
   icon: React.ReactNode;
   onPress: () => void;
+  backgroundColor?: string;
 }
 
-export const OperationButton = ({ title, icon, onPress }: OperationButtonProps) => {
+export const OperationButton = ({
+  title,
+  icon,
+  onPress,
+  backgroundColor = Theme.colors.primary.yellow,
+}: OperationButtonProps) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={styles.iconContainer}>
+    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
+      <View style={[styles.iconContainer, { backgroundColor }]}>
         {icon}
       </View>
       <Text style={styles.titleText}>{title}</Text>

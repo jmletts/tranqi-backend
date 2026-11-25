@@ -10,22 +10,31 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenProvider {
 
-    // Ideally, this should come from application.properties, e.g. @Value("${jwt.secret}")
-    // Here we generate a secure key for HS512 to ensure it's robust enough.
-    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    private final SecretKey key;
+    private final long jwtExpirationInMs;
 
-    @Value("${jwt.expiration:86400000}")
-    private long jwtExpirationInMs;
+    public JwtTokenProvider(
+            @Value("${jwt.secret:Tranki2026UltraSecurePersistentSecretKeyForHS512SigningAtLeast64BytesLong!!}") String jwtSecret,
+            @Value("${jwt.expiration:86400000}") long jwtExpirationInMs) {
+        this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        this.jwtExpirationInMs = jwtExpirationInMs;
+    }
 
     public String generateToken(Authentication authentication) {
-        String dni = authentication.getName(); // Since we use DNI as username
+        return generateToken(authentication, null);
+    }
+
+    public String generateToken(Authentication authentication, UUID userId) {
+        String dni = authentication.getName(); // DNI is used as username
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -34,11 +43,17 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .setSubject(dni)
                 .claim("roles", roles)
-                .setIssuedAt(new Date())
-                .setExpiration(expiryDate)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate);
+
+        if (userId != null) {
+            builder.claim("userId", userId.toString());
+        }
+
+        return builder
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
@@ -58,7 +73,6 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
             return true;
         } catch (Exception ex) {
-            // Log exceptions if needed: ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException
             return false;
         }
     }

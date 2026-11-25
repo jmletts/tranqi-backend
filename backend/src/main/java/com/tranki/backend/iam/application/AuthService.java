@@ -2,18 +2,25 @@ package com.tranki.backend.iam.application;
 
 import com.tranki.backend.iam.adapter.in.web.dto.LoginRequestDTO;
 import com.tranki.backend.iam.adapter.in.web.dto.RegisterRequestDTO;
+import com.tranki.backend.iam.adapter.in.web.dto.UpdateProfileRequestDTO;
+import com.tranki.backend.iam.adapter.in.web.dto.UserProfileResponseDTO;
 import com.tranki.backend.iam.domain.Dni;
 import com.tranki.backend.iam.domain.Email;
 import com.tranki.backend.iam.domain.PasswordHash;
+import com.tranki.backend.iam.domain.Role;
 import com.tranki.backend.iam.domain.User;
 import com.tranki.backend.iam.domain.UserRepository;
 import com.tranki.backend.iam.infrastructure.security.JwtTokenProvider;
+import com.tranki.backend.shared.infrastructure.exception.UnauthorizedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 @Service
 public class AuthService implements AuthUseCase {
@@ -62,6 +69,48 @@ public class AuthService implements AuthUseCase {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return tokenProvider.generateToken(authentication);
+
+        UUID userId = userRepository.findByDni(new Dni(request.getDni()))
+                .map(User::getId)
+                .orElse(null);
+
+        return tokenProvider.generateToken(authentication, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserProfileResponseDTO getProfileByDni(String dni) {
+        User user = userRepository.findByDni(new Dni(dni))
+                .orElseThrow(() -> new UnauthorizedException("Usuario no encontrado para el token actual"));
+        return toProfileDto(user);
+    }
+
+    @Override
+    @Transactional
+    public UserProfileResponseDTO updateProfileByDni(String dni, UpdateProfileRequestDTO request) {
+        User user = userRepository.findByDni(new Dni(dni))
+                .orElseThrow(() -> new UnauthorizedException("Usuario no encontrado para el token actual"));
+
+        Email nextEmail = (request.email() != null && !request.email().isBlank())
+                ? new Email(request.email().trim())
+                : null;
+
+        user.updateProfile(request.name(), request.phone(), nextEmail, request.address());
+        userRepository.save(user);
+        return toProfileDto(user);
+    }
+
+    private UserProfileResponseDTO toProfileDto(User user) {
+        return new UserProfileResponseDTO(
+                user.getId(),
+                user.getDni().getValue(),
+                user.getName(),
+                user.getPhone(),
+                user.getEmail().getValue(),
+                user.getAge(),
+                user.getAddress(),
+                user.getBaseFare() != null ? user.getBaseFare().name() : "GENERAL",
+                user.getRoles().stream().map(Role::name).toList()
+        );
     }
 }

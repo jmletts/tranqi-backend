@@ -5,6 +5,7 @@ import com.tranki.backend.card.domain.CardRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class CardPersistenceAdapter implements CardRepository {
@@ -24,6 +25,7 @@ public class CardPersistenceAdapter implements CardRepository {
         entity.setSecurityCodeHash(card.getSecurityCodeHash());
         entity.setKioskAgentId(card.getKioskAgentId());
         entity.setFailedLinkAttempts(card.getFailedLinkAttempts());
+        entity.setAlias(card.getAlias());
         
         repository.save(entity);
         return card;
@@ -31,32 +33,34 @@ public class CardPersistenceAdapter implements CardRepository {
 
     @Override
     public Optional<Card> findById(String cardId) {
-        return repository.findById(cardId).map(entity -> new Card(
-            entity.getCardId(),
-            entity.getAccountId(),
-            entity.getCardStatus(),
-            entity.getVerificationNumber(),
-            entity.getSecurityCodeHash(),
-            entity.getKioskAgentId(),
-            entity.getFailedLinkAttempts() != null ? entity.getFailedLinkAttempts() : 0
-        ));
+        return repository.findById(cardId).map(this::toDomain);
     }
 
     @Override
-    public Optional<Card> findByAccountId(java.util.UUID accountId) {
-        return repository.findByAccountId(accountId).map(entity -> new Card(
-            entity.getCardId(),
-            entity.getAccountId(),
-            entity.getCardStatus(),
-            entity.getVerificationNumber(),
-            entity.getSecurityCodeHash(),
-            entity.getKioskAgentId(),
-            entity.getFailedLinkAttempts() != null ? entity.getFailedLinkAttempts() : 0
-        ));
+    public Optional<Card> findByAccountId(UUID accountId) {
+        return repository.findByAccountId(accountId).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<Card> findByVerificationNumber(String verificationNumber) {
+        return repository.findByVerificationNumber(verificationNumber).map(this::toDomain);
     }
 
     @Override
     public boolean existsByVerificationNumber(String verificationNumber) {
         return repository.existsByVerificationNumber(verificationNumber);
+    }
+
+    private Card toDomain(CardJpaEntity entity) {
+        return new Card(
+            entity.getCardId(),
+            entity.getAccountId(),
+            entity.getCardStatus(),
+            entity.getVerificationNumber(),
+            entity.getSecurityCodeHash(),
+            entity.getKioskAgentId(),
+            entity.getFailedLinkAttempts() != null ? entity.getFailedLinkAttempts() : 0,
+            entity.getAlias()
+        );
     }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Theme } from '@/constants/theme';
 import { ChevronRightIcon, WalletInIcon, BusFrontIcon } from './icons';
 
@@ -9,9 +9,10 @@ interface MovementItemProps {
   amount: number;
   dateStr: string;
   cardId: string;
+  onPress?: () => void;
 }
 
-export const MovementItem = ({ type, title, amount, dateStr, cardId }: MovementItemProps) => {
+export const MovementItem = ({ type, title, amount, dateStr, cardId, onPress }: MovementItemProps) => {
   const isIncome = type === 'income';
   
   const iconBackgroundColor = isIncome ? Theme.colors.primary.blue : Theme.colors.status.expense;
@@ -20,7 +21,12 @@ export const MovementItem = ({ type, title, amount, dateStr, cardId }: MovementI
   const prefix = isIncome ? '+' : '-';
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      disabled={!onPress}
+    >
       <View style={[styles.iconBox, { backgroundColor: iconBackgroundColor }]}>
         <IconComponent size={24} color={Theme.colors.background.white} />
       </View>
@@ -40,7 +46,7 @@ export const MovementItem = ({ type, title, amount, dateStr, cardId }: MovementI
         <ChevronRightIcon size={20} color={Theme.colors.ui.textSecondary} />
         <Text style={styles.cardIdText}>{cardId}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

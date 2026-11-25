@@ -69,4 +69,24 @@ public class MqttBlacklistEventPublisher implements BlacklistEventPublisherPort 
             System.err.println("[MQTT ERROR] No se pudo publicar el evento en MQTT: " + e.getMessage());
         }
     }
+
+    @Override
+    public void publishUrgentUnblock(String cardId, long newVersion) {
+        try {
+            ObjectNode json = objectMapper.createObjectNode();
+            json.put("action", "REMOVE");
+            json.put("cardId", cardId);
+            json.put("version", newVersion);
+
+            String payload = objectMapper.writeValueAsString(json);
+            Message<String> message = MessageBuilder
+                    .withPayload(payload)
+                    .build();
+
+            mqttHandler.handleMessage(message);
+            System.out.println("[MQTT] Published unblock event to " + urgentTopic + ": " + payload);
+        } catch (Exception e) {
+            System.err.println("[MQTT ERROR] No se pudo publicar el desbloqueo en MQTT: " + e.getMessage());
+        }
+    }
 }

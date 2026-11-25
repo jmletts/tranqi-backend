@@ -5,4 +5,5 @@ import java.util.UUID;
 
 public interface AccountMovementRepository {
     List<AccountMovement> findByAccountIdOrderByDateDesc(UUID accountId);
+    void save(UUID accountId, AccountMovement movement);
 }

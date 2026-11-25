@@ -46,12 +46,14 @@ public class BlacklistPersistenceAdapter implements BlacklistRepository {
 
     @Override
     public long getCurrentGlobalVersion() {
-        return globalVersion.get();
+        long dbMax = jpaRepository.findMaxVersion();
+        return globalVersion.accumulateAndGet(dbMax, Math::max);
     }
 
     @Override
     public long incrementAndGetGlobalVersion() {
-        return globalVersion.incrementAndGet();
+        long current = getCurrentGlobalVersion();
+        return globalVersion.accumulateAndGet(current + 1, Math::max);
     }
 
     private BlacklistEntry toDomain(BlacklistJpaEntity entity) {

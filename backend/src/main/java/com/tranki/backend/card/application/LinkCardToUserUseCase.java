@@ -15,6 +15,8 @@ import com.tranki.backend.card.domain.UserRepositoryPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class LinkCardToUserUseCase {
 
@@ -32,12 +34,27 @@ public class LinkCardToUserUseCase {
 
     @Transactional(noRollbackFor = {InvalidSecurityCodeException.class, MaxLinkAttemptsExceededException.class})
     public void execute(LinkCardRequestDTO request) {
-        if (!userRepositoryPort.existsById(request.userId())) {
+        linkCard(request.cardId(), request.userId(), request.securityCode(), null);
+    }
+
+    @Transactional(noRollbackFor = {InvalidSecurityCodeException.class, MaxLinkAttemptsExceededException.class})
+    public void executeForAuthenticatedUser(UUID userId, String cardIdentifier, String securityCode, String alias) {
+        linkCard(cardIdentifier, userId, securityCode, alias);
+    }
+
+    private void linkCard(String rawIdentifier, UUID userId, String securityCode, String alias) {
+        if (!userRepositoryPort.existsById(userId)) {
             throw new IllegalArgumentException("User does not exist");
         }
 
-        Card card = cardRepository.findById(request.cardId())
-            .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+        if (rawIdentifier == null || rawIdentifier.isBlank()) {
+            throw new IllegalArgumentException("Identificador de tarjeta requerido");
+        }
+
+        String normalized = rawIdentifier.replaceAll("\\s+", "").trim();
+        Card card = cardRepository.findById(normalized)
+                .or(() -> cardRepository.findByVerificationNumber(normalized))
+                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
 
         if (card.getCardStatus() == CardStatus.IN_INVENTORY) {
             throw new IllegalStateException("Card is not activated yet");
@@ -47,19 +64,22 @@ public class LinkCardToUserUseCase {
         }
 
         Account account = accountRepository.findById(card.getAccountId())
-            .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         if (account.getUserId() != null) {
             throw new CardAlreadyLinkedException("Card is already linked to another user");
         }
 
         try {
-            card.validateAndRegisterLinkAttempt(request.securityCode(), passwordEncoderPort);
+            card.validateAndRegisterLinkAttempt(securityCode, passwordEncoderPort);
+            if (alias != null && !alias.isBlank()) {
+                card.rename(alias);
+            }
         } finally {
             cardRepository.save(card);
         }
 
-        account.linkUser(request.userId());
+        account.linkUser(userId);
         accountRepository.save(account);
     }
 }

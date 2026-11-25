@@ -22,6 +22,10 @@ app:
   cors:
     allowed-origins: ${FRONTEND_URL:http://localhost:8081}
 
+jwt:
+  secret: ${JWT_SECRET:Tranki2026UltraSecurePersistentSecretKeyForHS512SigningAtLeast64BytesLong!!}
+  expiration: ${JWT_EXPIRATION:86400000}
+
 mqtt:
   broker:
     host: ${MQTT_HOST:192.168.1.100}

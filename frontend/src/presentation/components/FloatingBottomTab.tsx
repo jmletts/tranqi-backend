@@ -1,9 +1,49 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Theme } from '@/constants/theme';
-import { HomeIcon, PassIcon, RefreshIcon, PercentIcon, UserIcon } from './icons';
+import {
+  HomeIcon,
+  PassIcon,
+  RefreshIcon,
+  PercentIcon,
+  UserIcon,
+  BusFrontIcon,
+  WalletInIcon,
+} from './icons';
 
-export const FloatingBottomTab = ({ state, descriptors, navigation }: any) => {
+export type BottomTabVariant = 'traveler' | 'agent' | 'transporter';
+
+interface FloatingBottomTabProps {
+  state: any;
+  descriptors: any;
+  navigation: any;
+  variant?: BottomTabVariant;
+  accentColor?: string;
+  activeContentColor?: string;
+}
+
+export const FloatingBottomTab = ({
+  state,
+  descriptors,
+  navigation,
+  variant = 'traveler',
+  accentColor,
+  activeContentColor,
+}: FloatingBottomTabProps) => {
+  const resolvedAccentColor =
+    accentColor ??
+    (variant === 'agent'
+      ? Theme.colors.primary.pink
+      : variant === 'transporter'
+      ? Theme.colors.primary.blue
+      : Theme.colors.primary.yellow);
+
+  const resolvedActiveContentColor =
+    activeContentColor ??
+    (variant === 'traveler'
+      ? Theme.colors.background.dark
+      : Theme.colors.background.white);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -38,14 +78,27 @@ export const FloatingBottomTab = ({ state, descriptors, navigation }: any) => {
           };
 
           const getIcon = () => {
-            const color = isFocused ? Theme.colors.background.dark : Theme.colors.background.white;
+            const color = isFocused
+              ? resolvedActiveContentColor
+              : Theme.colors.background.white;
             switch (route.name) {
-              case 'home': return <HomeIcon color={color} size={20} />;
-              case 'pass': return <PassIcon color={color} size={20} />;
-              case 'movimientos': return <RefreshIcon color={color} size={20} />;
-              case 'beneficios': return <PercentIcon color={color} size={20} />;
-              case 'perfil': return <UserIcon color={color} size={20} />;
-              default: return <HomeIcon color={color} size={20} />;
+              case 'home':
+              case 'inicio':
+                return <HomeIcon color={color} size={20} />;
+              case 'pass':
+                return <PassIcon color={color} size={20} />;
+              case 'recargar':
+                return <WalletInIcon color={color} size={20} />;
+              case 'flota':
+                return <BusFrontIcon color={color} size={20} />;
+              case 'movimientos':
+                return <RefreshIcon color={color} size={20} />;
+              case 'beneficios':
+                return <PercentIcon color={color} size={20} />;
+              case 'perfil':
+                return <UserIcon color={color} size={20} />;
+              default:
+                return <HomeIcon color={color} size={20} />;
             }
           };
 
@@ -60,14 +113,16 @@ export const FloatingBottomTab = ({ state, descriptors, navigation }: any) => {
               onLongPress={onLongPress}
               style={[
                 styles.tabButton,
-                isFocused && styles.tabButtonFocused
+                isFocused && { backgroundColor: resolvedAccentColor },
               ]}
             >
               {getIcon()}
-              <Text style={[
-                styles.tabText,
-                isFocused && styles.tabTextFocused
-              ]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  isFocused && { color: resolvedActiveContentColor },
+                ]}
+              >
                 {label as string}
               </Text>
             </TouchableOpacity>
@@ -111,16 +166,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     height: 54,
   },
-  tabButtonFocused: {
-    backgroundColor: Theme.colors.primary.yellow,
-  },
   tabText: {
     fontFamily: Theme.typography.family.bold,
     fontSize: 10,
     color: Theme.colors.background.white,
     marginTop: 4,
   },
-  tabTextFocused: {
-    color: Theme.colors.background.dark,
-  }
 });

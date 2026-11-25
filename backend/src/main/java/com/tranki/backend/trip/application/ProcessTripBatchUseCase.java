@@ -1,10 +1,11 @@
 package com.tranki.backend.trip.application;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tranki.backend.account.domain.Account;
 import com.tranki.backend.account.domain.AccountRepository;
 import com.tranki.backend.card.domain.Card;
 import com.tranki.backend.card.domain.CardRepository;
+import com.tranki.backend.fleet.domain.model.HardwareId;
+import com.tranki.backend.fleet.domain.repository.BusRepository;
 import com.tranki.backend.shared.domain.Money;
 import com.tranki.backend.shared.domain.events.CardBlockedByDebtEvent;
 import com.tranki.backend.shared.domain.events.TripDiscardedForDuplicateEvent;
@@ -28,12 +29,19 @@ public class ProcessTripBatchUseCase {
     private final TripRepository tripRepository;
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
+    private final BusRepository busRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public ProcessTripBatchUseCase(TripRepository tripRepository, CardRepository cardRepository, AccountRepository accountRepository, ApplicationEventPublisher eventPublisher) {
+    public ProcessTripBatchUseCase(
+            TripRepository tripRepository,
+            CardRepository cardRepository,
+            AccountRepository accountRepository,
+            BusRepository busRepository,
+            ApplicationEventPublisher eventPublisher) {
         this.tripRepository = tripRepository;
         this.cardRepository = cardRepository;
         this.accountRepository = accountRepository;
+        this.busRepository = busRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -43,6 +51,13 @@ public class ProcessTripBatchUseCase {
         int successful = 0;
         int duplicates = 0;
         int errors = 0;
+
+        String resolvedLicensePlate = null;
+        if (request.busId() != null && !request.busId().isBlank()) {
+            resolvedLicensePlate = busRepository.findByHardwareId(new HardwareId(request.busId()))
+                    .map(bus -> bus.getLicensePlate().value())
+                    .orElse(null);
+        }
 
         for (TripRequestDTO tripDto : request.trips()) {
             try {
@@ -78,9 +93,19 @@ public class ProcessTripBatchUseCase {
 
                 accountRepository.save(account);
 
-                String processingStatus = "PROCESADO";
+                String processingStatus = "PROCESSED";
                 
-                Trip trip = new Trip(tripDto.tripId(), tripDto.cardId(), account.getAccountId(), fare, tripDto.localTimestamp(), processingStatus, requiresReview);
+                Trip trip = new Trip(
+                        tripDto.tripId(),
+                        tripDto.cardId(),
+                        account.getAccountId(),
+                        fare,
+                        tripDto.localTimestamp(),
+                        processingStatus,
+                        requiresReview,
+                        request.busId(),
+                        resolvedLicensePlate
+                );
                 tripRepository.save(trip);
 
                 if (requiresReview) {

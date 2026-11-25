@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
 import { FloatingBottomTab } from '@presentation/components/FloatingBottomTab';
+import { ScreenHeader } from '@presentation/components/ScreenHeader';
 import { useAuthStore } from '@presentation/state/useAuthStore';
 
 export default function TabLayout() {
@@ -15,7 +16,8 @@ export default function TabLayout() {
     <Tabs
       tabBar={(props) => <FloatingBottomTab {...props} />}
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: () => <ScreenHeader />,
       }}
     >
       <Tabs.Screen

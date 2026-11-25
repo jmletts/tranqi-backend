@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface MovementJpaRepository extends JpaRepository<MovementJpaEntity, String> {
     List<MovementJpaEntity> findByAccountIdOrderByMovementDateDesc(UUID accountId);
+    List<MovementJpaEntity> findByAccountIdInOrderByMovementDateDesc(List<UUID> accountIds);
 }

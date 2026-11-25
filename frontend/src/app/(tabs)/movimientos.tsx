@@ -1,67 +1,95 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 import { Theme } from '@/constants/theme';
 import { OperationButton } from '@presentation/components/OperationButton';
 import { MovementItem } from '@presentation/components/MovementItem';
-import { HamburgerIcon, RefreshIcon, LockIcon, CardSmallIcon } from '@presentation/components/icons';
+import { RefreshIcon, LockIcon, CardSmallIcon } from '@presentation/components/icons';
+import { useTravelerStore } from '@presentation/state/useTravelerStore';
 
 export default function MovimientosScreen() {
+  const router = useRouter();
+  const movements = useTravelerStore((state) => state.movements);
+  const isLoadingMovements = useTravelerStore((state) => state.isLoadingMovements);
+  const error = useTravelerStore((state) => state.error);
+  const fetchMovements = useTravelerStore((state) => state.fetchMovements);
+  const refreshAll = useTravelerStore((state) => state.refreshAll);
+
+  useEffect(() => {
+    fetchMovements().catch(() => {});
+  }, [fetchMovements]);
+
+  const handleRefresh = useCallback(() => {
+    refreshAll().catch(() => {});
+  }, [refreshAll]);
+
   const operations = [
-    { title: 'Transferir\nSaldo', icon: <RefreshIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Bloquear\nTarjeta', icon: <LockIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Recargar\nTarjeta', icon: <RefreshIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Cambiar\nTarifa', icon: <CardSmallIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Tarjeta\nDigital', icon: <RefreshIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Registrar\nTarjeta', icon: <RefreshIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Sincronizar\nTarjeta', icon: <RefreshIcon size={24} color={Theme.colors.background.dark} /> },
-    { title: 'Soporte\n', icon: <CardSmallIcon size={24} color={Theme.colors.background.dark} /> },
+    {
+      title: 'Transferir\nSaldo',
+      icon: <RefreshIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: () => router.push('/transfer'),
+    },
+    {
+      title: 'Bloquear\nTarjeta',
+      icon: <LockIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: () => router.push('/card-detail'),
+    },
+    {
+      title: 'Recargar\nTarjeta',
+      icon: <RefreshIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: () => router.push('/recharge'),
+    },
+    {
+      title: 'Administrar\nTarjetas',
+      icon: <CardSmallIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: () => router.push('/card-detail'),
+    },
+    {
+      title: 'Registrar\nTarjeta',
+      icon: <RefreshIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: () => router.push('/add-card'),
+    },
+    {
+      title: 'Sincronizar\nDatos',
+      icon: <RefreshIcon size={24} color={Theme.colors.background.dark} />,
+      onPress: async () => {
+        try {
+          await refreshAll();
+          Alert.alert('Sincronizado', 'Saldos y movimientos actualizados desde el servidor.');
+        } catch (err: unknown) {
+          Alert.alert('Error', err instanceof Error ? err.message : 'No se pudo sincronizar');
+        }
+      },
+    },
   ];
-
-  const movements = [
-    { id: 1, type: 'income', title: 'Recarga Fisica', amount: 20.12, dateStr: '20/05/26', cardId: '01HB' },
-    { id: 2, type: 'expense', title: 'ET. Leon de San Jeronimo', amount: 0.60, dateStr: '20/05/26', cardId: '01HB' },
-    { id: 3, type: 'expense', title: 'ET. Satelite', amount: 2.40, dateStr: '20/05/26', cardId: 'AS89' },
-    { id: 4, type: 'expense', title: 'ET. Leon de San Jeronimo', amount: 0.60, dateStr: '19/05/26', cardId: '01HB' },
-    { id: 5, type: 'income', title: 'Recarga Digital', amount: 15.00, dateStr: '17/05/26', cardId: 'AS89' },
-    { id: 6, type: 'expense', title: 'ET. Leon de San Jeronimo', amount: 0.60, dateStr: '13/05/26', cardId: '01HB' },
-  ] as const;
-
-  const Header = () => (
-    <View style={styles.header}>
-      <TouchableOpacity style={styles.menuButton}>
-        <HamburgerIcon size={24} color={Theme.colors.background.white} />
-      </TouchableOpacity>
-      <View style={styles.logoContainer}>
-        <View style={styles.logoIcon}>
-          <Text style={styles.logoIconText}>III</Text>
-        </View>
-        <Text style={styles.logoText}>Tranqi</Text>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
-      <View style={styles.blackBackground}>
-        <SafeAreaView>
-          <Header />
-        </SafeAreaView>
-      </View>
-      
       <View style={styles.mainContainer}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isLoadingMovements} onRefresh={handleRefresh} />
+          }
         >
           {/* Operations Section */}
           <Text style={styles.sectionTitle}>Operaciones</Text>
           <View style={styles.operationsGrid}>
             {operations.map((op, idx) => (
-              <OperationButton 
+              <OperationButton
                 key={idx}
                 title={op.title}
                 icon={op.icon}
-                onPress={() => {}}
+                onPress={op.onPress}
               />
             ))}
           </View>
@@ -74,18 +102,39 @@ export default function MovimientosScreen() {
             </Text>
           </View>
 
-          <View style={styles.movementsList}>
-            {movements.map(mov => (
-              <MovementItem
-                key={mov.id}
-                type={mov.type}
-                title={mov.title}
-                amount={mov.amount}
-                dateStr={mov.dateStr}
-                cardId={mov.cardId}
-              />
-            ))}
-          </View>
+          {isLoadingMovements && movements.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <ActivityIndicator size="large" color={Theme.colors.primary.blue} />
+              <Text style={styles.emptyText}>Cargando movimientos...</Text>
+            </View>
+          ) : error && movements.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : movements.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>Aún no tienes movimientos registrados en tus tarjetas.</Text>
+            </View>
+          ) : (
+            <View style={styles.movementsList}>
+              {movements.map((mov) => (
+                <MovementItem
+                  key={mov.identifier}
+                  type={mov.type}
+                  title={mov.title}
+                  amount={mov.amount}
+                  dateStr={mov.dateStr}
+                  cardId={mov.cardId}
+                  onPress={() => {
+                    router.push({
+                      pathname: '/movement-detail',
+                      params: { id: mov.identifier },
+                    });
+                  }}
+                />
+              ))}
+            </View>
+          )}
 
           <View style={styles.bottomSpacer} />
         </ScrollView>
@@ -99,47 +148,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Theme.colors.background.dark,
   },
-  blackBackground: {
-    backgroundColor: Theme.colors.background.dark,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-    paddingHorizontal: Theme.spacing.l,
-    paddingBottom: Theme.spacing.xl,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.m,
-  },
-  menuButton: {
-    padding: Theme.spacing.s,
-    marginLeft: -Theme.spacing.s,
-  },
-  logoContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    marginRight: 24, // to balance the menu icon
-  },
-  logoIcon: {
-    width: 24,
-    height: 24,
-    backgroundColor: Theme.colors.primary.yellow,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoIconText: {
-    fontFamily: Theme.typography.family.black,
-    fontSize: 12,
-    color: Theme.colors.background.dark,
-  },
-  logoText: {
-    fontFamily: Theme.typography.family.black,
-    fontSize: 24,
-    color: Theme.colors.background.white,
-  },
   mainContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.white,
@@ -148,6 +156,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: Theme.spacing.l,
+    flexGrow: 1,
   },
   sectionTitle: {
     fontFamily: Theme.typography.family.black,
@@ -173,10 +182,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     lineHeight: 16,
   },
+  emptyBox: {
+    paddingVertical: 36,
+    alignItems: 'center',
+    gap: 10,
+  },
+  emptyText: {
+    fontFamily: Theme.typography.family.medium,
+    fontSize: 13,
+    color: Theme.colors.ui.textSecondary,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontFamily: Theme.typography.family.bold,
+    fontSize: 13,
+    color: Theme.colors.status.expense,
+    textAlign: 'center',
+  },
   movementsList: {
     width: '100%',
   },
   bottomSpacer: {
-    height: 100, // For bottom tab
-  }
+    height: 100,
+  },
 });

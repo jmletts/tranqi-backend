@@ -8,11 +8,12 @@ interface PillButtonProps extends TouchableOpacityProps {
   loading?: boolean;
 }
 
-export const PillButton = ({ title, variant = 'dark', loading, style, ...rest }: PillButtonProps) => {
+export const PillButton = ({ title, variant = 'dark', loading, style, testID, ...rest }: PillButtonProps) => {
   const isDark = variant === 'dark';
 
   return (
     <TouchableOpacity 
+      testID={testID}
       style={[
         styles.button, 
         isDark ? styles.darkButton : styles.outlineButton,

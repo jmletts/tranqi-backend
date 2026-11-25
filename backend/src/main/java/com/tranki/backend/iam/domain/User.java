@@ -81,4 +81,19 @@ public class User {
             this.roles.add(role);
         }
     }
+
+    public void updateProfile(String name, String phone, Email email, String address) {
+        if (name != null && !name.isBlank()) {
+            this.name = name.trim();
+        }
+        if (phone != null && !phone.isBlank()) {
+            this.phone = phone.trim();
+        }
+        if (email != null) {
+            this.email = email;
+        }
+        if (address != null && !address.isBlank()) {
+            this.address = address.trim();
+        }
+    }
 }

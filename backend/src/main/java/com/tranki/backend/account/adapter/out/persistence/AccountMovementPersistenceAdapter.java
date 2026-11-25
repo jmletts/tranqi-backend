@@ -31,4 +31,17 @@ public class AccountMovementPersistenceAdapter implements AccountMovementReposit
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void save(UUID accountId, AccountMovement movement) {
+        MovementJpaEntity entity = new MovementJpaEntity(
+                movement.identifier(),
+                accountId,
+                movement.type(),
+                movement.amount().amount(),
+                movement.date(),
+                movement.detail()
+        );
+        repository.save(entity);
+    }
 }

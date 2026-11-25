@@ -25,7 +25,9 @@ public class TripPersistenceAdapter implements TripRepository {
                 new Money(entity.getFare()),
                 entity.getLocalTimestamp(),
                 entity.getProcessingStatus(),
-                entity.isRequiresDebtReview()
+                entity.isRequiresDebtReview(),
+                entity.getBusId(),
+                entity.getLicensePlate()
         ));
     }
 
@@ -38,7 +40,9 @@ public class TripPersistenceAdapter implements TripRepository {
                 trip.getFare().amount(),
                 trip.getLocalTimestamp(),
                 trip.getProcessingStatus(),
-                trip.isRequiresDebtReview()
+                trip.isRequiresDebtReview(),
+                trip.getBusId(),
+                trip.getLicensePlate()
         );
         repository.save(entity);
     }

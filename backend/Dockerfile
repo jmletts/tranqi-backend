@@ -8,8 +8,8 @@ COPY .mvn .mvn
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 # Compilar el artefacto sin ejecutar pruebas (los tests ya se validan en CI)
-COPY src src
-RUN ./mvnw clean package -DskipTests
+COPY src/main src/main
+RUN ./mvnw clean package -Dmaven.test.skip=true
 
 # Etapa de ejecución liviana
 FROM eclipse-temurin:21-jre-alpine

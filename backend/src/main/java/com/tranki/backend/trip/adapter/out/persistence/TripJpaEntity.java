@@ -1,5 +1,6 @@
 package com.tranki.backend.trip.adapter.out.persistence;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -19,9 +20,19 @@ public class TripJpaEntity {
     private String processingStatus;
     private boolean requiresDebtReview;
 
+    @Column(name = "bus_id")
+    private String busId;
+
+    @Column(name = "license_plate")
+    private String licensePlate;
+
     public TripJpaEntity() {}
 
     public TripJpaEntity(String tripId, String cardId, UUID accountId, BigDecimal fare, LocalDateTime localTimestamp, String processingStatus, boolean requiresDebtReview) {
+        this(tripId, cardId, accountId, fare, localTimestamp, processingStatus, requiresDebtReview, null, null);
+    }
+
+    public TripJpaEntity(String tripId, String cardId, UUID accountId, BigDecimal fare, LocalDateTime localTimestamp, String processingStatus, boolean requiresDebtReview, String busId, String licensePlate) {
         this.tripId = tripId;
         this.cardId = cardId;
         this.accountId = accountId;
@@ -29,6 +40,8 @@ public class TripJpaEntity {
         this.localTimestamp = localTimestamp;
         this.processingStatus = processingStatus;
         this.requiresDebtReview = requiresDebtReview;
+        this.busId = busId;
+        this.licensePlate = licensePlate;
     }
 
     public String getTripId() { return tripId; }
@@ -38,4 +51,6 @@ public class TripJpaEntity {
     public LocalDateTime getLocalTimestamp() { return localTimestamp; }
     public String getProcessingStatus() { return processingStatus; }
     public boolean isRequiresDebtReview() { return requiresDebtReview; }
+    public String getBusId() { return busId; }
+    public String getLicensePlate() { return licensePlate; }
 }

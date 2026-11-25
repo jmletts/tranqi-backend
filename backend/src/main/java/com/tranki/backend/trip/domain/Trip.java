@@ -12,8 +12,14 @@ public class Trip {
     private LocalDateTime localTimestamp;
     private String processingStatus;
     private boolean requiresDebtReview;
+    private String busId;
+    private String licensePlate;
 
     public Trip(String tripId, String cardId, UUID accountId, Money fare, LocalDateTime localTimestamp, String processingStatus, boolean requiresDebtReview) {
+        this(tripId, cardId, accountId, fare, localTimestamp, processingStatus, requiresDebtReview, null, null);
+    }
+
+    public Trip(String tripId, String cardId, UUID accountId, Money fare, LocalDateTime localTimestamp, String processingStatus, boolean requiresDebtReview, String busId, String licensePlate) {
         this.tripId = tripId;
         this.cardId = cardId;
         this.accountId = accountId;
@@ -21,6 +27,8 @@ public class Trip {
         this.localTimestamp = localTimestamp;
         this.processingStatus = processingStatus;
         this.requiresDebtReview = requiresDebtReview;
+        this.busId = busId;
+        this.licensePlate = licensePlate;
     }
 
     public String getTripId() { return tripId; }
@@ -30,4 +38,6 @@ public class Trip {
     public LocalDateTime getLocalTimestamp() { return localTimestamp; }
     public String getProcessingStatus() { return processingStatus; }
     public boolean isRequiresDebtReview() { return requiresDebtReview; }
+    public String getBusId() { return busId; }
+    public String getLicensePlate() { return licensePlate; }
 }

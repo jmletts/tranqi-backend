@@ -6,6 +6,7 @@ import com.tranki.backend.fleet.domain.model.LicensePlate;
 import com.tranki.backend.fleet.domain.model.PublicKey;
 import com.tranki.backend.fleet.domain.repository.BusRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,7 +25,8 @@ public class BusPersistenceAdapter implements BusRepository {
             bus.getId(),
             bus.getLicensePlate().value(),
             bus.getHardwareId().value(),
-            bus.getPublicKey().value()
+            bus.getPublicKey().value(),
+            bus.getOwnerUserId()
         ));
     }
 
@@ -35,12 +37,17 @@ public class BusPersistenceAdapter implements BusRepository {
 
     @Override
     public Optional<Bus> findByLicensePlate(LicensePlate licensePlate) {
-        return jpaRepository.findByLicensePlate(licensePlate.value()).map(this::toDomain);
+        return jpaRepository.findByLicensePlateIgnoreCase(licensePlate.value()).map(this::toDomain);
     }
 
     @Override
     public Optional<Bus> findByHardwareId(HardwareId hardwareId) {
         return jpaRepository.findByHardwareId(hardwareId.value()).map(this::toDomain);
+    }
+
+    @Override
+    public List<Bus> findByOwnerUserId(UUID ownerUserId) {
+        return jpaRepository.findByOwnerUserId(ownerUserId).stream().map(this::toDomain).toList();
     }
 
     @Override
@@ -58,7 +65,8 @@ public class BusPersistenceAdapter implements BusRepository {
             entity.getId(),
             new LicensePlate(entity.getLicensePlate()),
             new HardwareId(entity.getHardwareId()),
-            new PublicKey(entity.getPublicKey())
+            new PublicKey(entity.getPublicKey()),
+            entity.getOwnerUserId()
         );
     }
 }
